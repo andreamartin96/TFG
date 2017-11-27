@@ -46,8 +46,8 @@
     
       <form>        
         <div class="block form-group">
-          <label for="doc-id">Documento con índices</label>
-          <input type="file" name="index" id="index-id" value="" >
+          <label for="doc-id">Seleccione el documento bibtex:</label>
+          <input type="file" name="index-id" id="index-id" value="" >
         </div>
         
         <div class="block form-group">
@@ -80,6 +80,7 @@
         $('#combinar').click(runCombination);
       });
       
+            
       function runCombination() {
         this.disabled = true;
         $('#error').remove();
@@ -87,36 +88,29 @@
             .withSuccessHandler(
               function(msg, element) {
               
-                var r1 = /\[/g;
+                /*var r1 = /\[/g;
                 var r2 = /\d/;
-                var r4 = /\]/;
-                var r3 = new RegExp(r1.source + r2.source + r4.source, (r1.global ? 'g' : '') + (r1.ignoreCase ? 'i' : '') + (r1.multiline ? 'm' : ''));
-                var solution = msg.match(r3);
+                var r4 = /\]/;*/
+                var r1 = /cite/g;
+                var r4 = /\{/;
+                var r5 = /\w/;
+                var r6 = /\}/;
+                var r3 = new RegExp(r1.source + r4.source + r5.source + r6.source, (r1.global ? 'g' : '') + (r1.ignoreCase ? 'i' : '') + (r1.multiline ? 'm' : ''));
+                var solutionArray = msg.match(r3);
                 
                 var i = 0;
-                var charsToSearch = "";
-                var duplicated = false;
                 var auxArray = [];
-                var cad = "";
-                while(i < solution.length && !duplicated){
-                
-                  charsToSearch = solution[i];
-                  if(auxArray.indexOf(charsToSearch) != -1){ // if indexOf returns -1, then the chars tu search exist in the solution
-                    duplicated = true;
-                    alert("There can not be two bibliographic references with the same expresion");
-                  }
-                  else{
-                    auxArray[i] = solution[i];
-                    cad = cad + solution[i] + "\n";
-                    i++;
-                  }
+                var cad = ""; // cad coteins all \cite. It is used to test!!!!!!
+                while(i < solutionArray.length){
+                  auxArray[i] = solutionArray[i];
+                  cad = cad + solutionArray[i] + "\n";
+                  i++;
+                  
                 }
                 
-                element.disabled = false;  
-                
                 $('#text').val(cad);
-                element.disabled = false;
-                
+                element.disabled = false;  
+                               
               })
             .withFailureHandler(
               function(msg, element) {
