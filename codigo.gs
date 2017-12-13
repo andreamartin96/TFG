@@ -49,11 +49,49 @@ function showSidebar() {
   DocumentApp.getUi().showSidebar(ui);
 }
 
+function getFiles(e) {
+  var data = {};
+  var idn = e;
+  e = e == "root" ? DriveApp.getRootFolder().getId() : e;
+  data[e] = {};
+  data[e].keyname = DriveApp.getFolderById(e).getName();
+  data[e].keyparent = idn == "root"
+    ? null : DriveApp.getFolderById(e).getParents().hasNext()
+    ? DriveApp.getFolderById(e).getParents().next().getId() : null;
+  data[e].files = [];
+  var da = idn == "root" ? DriveApp.getRootFolder() : DriveApp.getFolderById(e);
+  var folders = da.getFolders();
+  var files = da.getFiles();
+  while (folders.hasNext()) {
+    var folder = folders.next();
+    data[e].files.push({name: folder.getName(), id: folder.getId(), mimeType: "folder"});
+  }
+  while (files.hasNext()) {
+    var file = files.next();
+    data[e].files.push({name: file.getName(), id: file.getId(), mimeType: file.getMimeType()});
+  }
+  return data;
+}
+
+function doSomething(id) {
+  // do something
+  var res = id;
+  return res;
+}
+
 function getText(){
   var body = DocumentApp.getActiveDocument().getBody();
   var text = body.getText();
   
   return text;
+}
+
+
+function getBibDocument(id){
+  var file = DriveApp.getFileById(id);
+  var contentFile = file.getContent();
+ 
+  return contentFile;
 }
 
 /**

@@ -5,8 +5,17 @@
     <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
     <!-- The CSS package above applies Google styling to buttons and other elements. -->
     
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.js"></script>
+    
     <style>
      
+    #select_file {
+      text-align: left;
+      width: 95%;
+      font-size: 1em;
+      margin: auto;
+      height: 3em;
+    }
      
     .branding-below {
       bottom: 56px;
@@ -46,19 +55,23 @@
     
       <form>        
         <div class="block form-group">
-          <label for="doc-id">Seleccione el documento bibtex:</label>
-          <input type="file" name="index-id" id="index-id" value="" >
+          <label for="select_file">Select a bibtex document:</label>
+          <br>
+          <select id="select_file" name="select_file"></select>
+          <p><b id="tittle" ></b></p>
+          <p id="id"></p>
         </div>
         
         <div class="block form-group">
-          <label for="translated-text"><b>Prueba:</b></label>
-          <textarea class="width-100" id="text" rows="20"></textarea>
+          <label for="text"><b>Prueba:</b></label>
+          <textarea class="width-100" id="text" name="text" rows="15"></textarea>
         </div>
         
         <div class="block" id="button-bar">
           <button class="blue" id="combinar">Combinar documentos</button>
           <input type="reset" id="reset" value="Resetear formulario">
         </div>
+        
       </form>    
     
     </div>
@@ -72,6 +85,60 @@
     </script>
     
     <script>
+      var alldata = {};
+
+  $(function() {
+    google.script.run.withSuccessHandler(importData).getFiles("root");
+
+    $('#select_file').change(function() {
+      var id = $('#select_file').val();
+      var disp = $('#select_file option:selected').text();
+      if (~disp.indexOf("Folder") || ~disp.indexOf("../")) {
+        $('#select_file > option').remove();
+        if (alldata[id]) {
+          var dat = {};
+          dat[id] = alldata[id];
+          importData(dat);
+          return;
+        } else {
+          google.script.run.withSuccessHandler(importData).getFiles(id);
+          google.script.run.withSuccessHandler(
+            function(msg, element){
+              var cad = "";
+              var text = msg
+              cad = cad + "Bibtext Document: \n" + toString(text) + "\n";
+              $('#text').val(cad);
+           }).getFiles(id);
+          return;
+        }
+        return;
+      }
+      google.script.run.withSuccessHandler(output).doSomething(id);
+    });
+  });
+
+  function importData(e) {
+    var key = Object.keys(e)[0];
+    if (!alldata[key]) alldata[key] = e[key];
+    if (e[key]["keyparent"]) {
+      $('#select_file').append($('<option>').html("./" + e[key]["keyname"]).val(key));
+      $('#select_file').append($('<option>').html("../").val(e[key]["keyparent"]));
+    } else {
+      $('#select_file').append($('<option>').html("./" + e[key]["keyname"]).val(key));
+    }
+    for (var i=0; i < e[key]["files"].length; i++) {
+      $('#select_file').append($('<option>')
+        .html(e[key]["files"][i].mimeType == "folder" ? "[Folder]" + e[key]["files"][i].name : e[key]["files"][i].name)
+        .val(e[key]["files"][i].id)
+      );
+    }
+  }
+
+  function output(res){
+    var tittle = "Selected document: ";
+    $('#tittle').text(tittle);
+    $('#id').text(res);
+  }
       /**
        * On document load, assign click handlers to each button and try to load the
        * user's origin and destination language preferences if previously set.
@@ -80,6 +147,14 @@
         $('#combinar').click(runCombination);
       });
       
+      $(function() {
+        $('#reset').click(resetValues);
+      });
+      
+      function resetValues() {
+        document.getElementById("id").innerHTML = "";
+        document.getElementById("tittle").innerHTML = "";
+      }
             
       function runCombination() {
         this.disabled = true;
@@ -88,27 +163,58 @@
             .withSuccessHandler(
               function(msg, element) {
               
-                /*var r1 = /\[/g;
-                var r2 = /\d/;
-                var r4 = /\]/;*/
-                var r1 = /cite/g;
+                var r1 = /\\/g;
+                var r2 = /cite/;
+                var r3 = /\{/;
+                var r4 = /\w{1,15}/;
+                var r5 = /\}/;
+                
+                /* var r1 = /\\/g;
                 var r4 = /\{/;
                 var r5 = /\w/;
-                var r6 = /\}/;
-                var r3 = new RegExp(r1.source + r4.source + r5.source + r6.source, (r1.global ? 'g' : '') + (r1.ignoreCase ? 'i' : '') + (r1.multiline ? 'm' : ''));
-                var solutionArray = msg.match(r3);
+                var r6 = /\}/;*/
+                
+                var r6 = new RegExp(r1.source + r2.source + r3.source + r4.source + r5.source, (r1.global ? 'g' : '') + (r1.ignoreCase ? 'i' : '') + (r1.multiline ? 'm' : ''));
+                var solutionArray = msg.match(r6);
                 
                 var i = 0;
                 var auxArray = [];
                 var cad = ""; // cad coteins all \cite. It is used to test!!!!!!
-                while(i < solutionArray.length){
-                  auxArray[i] = solutionArray[i];
-                  cad = cad + solutionArray[i] + "\n";
-                  i++;
-                  
-                }
+                var length  = 0;
+                if(solutionArray){
                 
-                $('#text').val(cad);
+                  length = solutionArray.length;
+                  
+                  while(i < length){
+                    auxArray[i] = solutionArray[i];
+                    cad = cad + solutionArray[i] + "\n";
+                    i++;
+                  
+                  }
+                  
+                  /*var id = document.getElementById("id").innerHTML;
+                  
+                  google.script.run
+                    .withSuccessHandler(
+                      function(text, element) {
+                       cad = cad + "Bibtext Document: \n" + text + "\n";
+                       })
+                     .withFailureHandler(
+                       function(msg, element) {
+                         msg = "There was a problem when the bibtex document was opened. Try again."
+                         showError(msg, $('#button-bar'));
+                         element.disabled = false;
+                        })
+                     .withUserObject(this)
+                     .getBibDocument(id);*/
+                  
+                  
+                 }else{
+                  cad = "Error!!";
+                 }
+                
+                
+                //$('#text').val(cad);
                 element.disabled = false;  
                                
               })
