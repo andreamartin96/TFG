@@ -76,7 +76,7 @@ function getCites(){
   var body = DocumentApp.getActiveDocument().getBody();
   var text = body.getText();
   
-  var r1 = /\\/g;
+  var r1 = /[\x00-\x7F]/g;
   var r2 = /cite/;
   var r3 = /\{/;
   var r4 = /\w{1,40}/;
@@ -99,11 +99,6 @@ function getCites(){
     cad = "Error during the proccess!! Could be a problem in your active document. Check it";
     solutionArray[0] = cad;
   }
-  
-  for(var i = 0; i < solutionArray.length; i++){
-    //solutionArray[i] = solutionArray[i].substring(1);
-  }
-  
   
   
   return solutionArray;
@@ -148,8 +143,15 @@ function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
   for(var j = 0; j < arrayCitesId.length; j++){  
     var cite = arrayCitesId[j];
     var replacement = "[" + j.toString() + "]";
-    var toSearch = "\cite{" + cite + "}";
+    var toSearch = "[[:92:]]cite{" + cite + "}";
     body2.editAsText().replaceText(toSearch,replacement);
+
+  }
+  body2.appendHorizontalRule();
+  for(var i = 0; i < arrayCitesId.length; i++){  
+    var cite = arrayCitesId[i];
+    var text = "[" + i.toString() + "]      ----     " + bibtex_dict[cite]["title"] + " | " + bibtex_dict[cite]["authors"] + " | " + bibtex_dict[cite]["year"];
+    body2.appendParagraph(text);
 
   }
   doc.saveAndClose();
@@ -202,6 +204,7 @@ function getBibtexAndDoc(e){
     var outobj = bibtex.google(i);
     bibtex_dict[bibtex.data[i].cite] = outobj;
   }
+  
   //-------------  
   //loop through all documents to find document with title Citation Test, this is just the dev test document
  
@@ -269,15 +272,6 @@ function doSomething(id) {
   return res;
 }
 
-
-
-
-function getBibDocument(id){
-  var file = DriveApp.getFileById(id);
-  var contentFile = file.getContent();
- 
-  return contentFile;
-}
 
 /**
  * Gets the text the user has selected. If there is no selection,
@@ -474,6 +468,7 @@ function translateText(text, origin, dest) {
   return LanguageApp.translate(text, origin, dest);
 }
 
+
 //========================================================
 
 
@@ -585,16 +580,16 @@ function translateText(text, origin, dest) {
  * setOption(). When setting in the constructor the options are given in an
  * associative array. The options are:
  * 
- * 	-	stripDelimiter (default: true) Stripping the delimiter surrounding the entries. 
- * 	-	validate (default: true) Validation while parsing. 
- * 	-	unwrap (default: false) Unwrapping entries while parsing. 
- * 	-	wordWrapWidth (default: false) If set to a number higher one
- * 	    that the entries are wrapped after that amount of characters. 
- * 	-	wordWrapBreak (default: \n) String used to break the line (attached to the line). 
- * 	-	wordWrapCut (default: 0) If set to zero the line will we
- * 	    wrapped at the next possible space, if set to one the line will be
- * 	    wrapped exactly after the given amount of characters. 
- * 	-	removeCurlyBraces (default: false) If set to true Curly Braces will be removed. 
+ *  - stripDelimiter (default: true) Stripping the delimiter surrounding the entries. 
+ *  - validate (default: true) Validation while parsing. 
+ *  - unwrap (default: false) Unwrapping entries while parsing. 
+ *  - wordWrapWidth (default: false) If set to a number higher one
+ *      that the entries are wrapped after that amount of characters. 
+ *  - wordWrapBreak (default: \n) String used to break the line (attached to the line). 
+ *  - wordWrapCut (default: 0) If set to zero the line will we
+ *      wrapped at the next possible space, if set to one the line will be
+ *      wrapped exactly after the given amount of characters. 
+ *  - removeCurlyBraces (default: false) If set to true Curly Braces will be removed. 
  * 
  * Example of setting options in the constructor:
  * 
@@ -616,12 +611,12 @@ function translateText(text, origin, dest) {
  * the hash table correspond to the keys used in bibtex and the values are
  * the corresponding values. Some of these keys are:
  * 
- * 	-	cite - The key used in a LaTeX source to do the citing. 
- * 	-	entryType - The type of the entry, like techreport, book and so on. 
- * 	-	author - One or more authors of the entry. This entry is also a
- * 	    list with hash tables representing the authors as entries. The
- * 	    author has table is explained later. 
- * 	-	title - Title of the entry. 
+ *  - cite - The key used in a LaTeX source to do the citing. 
+ *  - entryType - The type of the entry, like techreport, book and so on. 
+ *  - author - One or more authors of the entry. This entry is also a
+ *      list with hash tables representing the authors as entries. The
+ *      author has table is explained later. 
+ *  - title - Title of the entry. 
  * 
  * Author
  * ------
@@ -630,12 +625,12 @@ function translateText(text, origin, dest) {
  * keys: first, von, last and jr. The keys are explained in the following
  * list:
  * 
- * 	-	first - The first name of the author. 
- * 	-	von - Some names have a 'von' part in their name. This is usually a sign of nobleness. 
- * 	-	last - The last name of the author. 
- * 	-	jr - Sometimes a author is the son of his father and has the
- * 	    same name, then the value would be jr. The same is true for the
- * 	    value sen but vice versa. 
+ *  - first - The first name of the author. 
+ *  - von - Some names have a 'von' part in their name. This is usually a sign of nobleness. 
+ *  - last - The last name of the author. 
+ *  - jr - Sometimes a author is the son of his father and has the
+ *      same name, then the value would be jr. The same is true for the
+ *      value sen but vice versa. 
  * 
  * Adding an entry
  * ----------------
@@ -1033,19 +1028,19 @@ function trim( str, charlist ) {
         whitespace = charlist.replace(/([\[\]\(\)\.\?\/\*\{\}\+\$\^\:])/g, '\$1');
     }
   
-	for (var i = 0; i < str.length; i++) {
-		if (whitespace.indexOf(str.charAt(i)) === -1) {
-		str = str.substring(i);
-		break;
-		}
-	}
-	for (i = str.length - 1; i >= 0; i--) {
-		if (whitespace.indexOf(str.charAt(i)) === -1) {
-			str = str.substring(0, i + 1);
-			break;
-    	}
-	}
-	return whitespace.indexOf(str.charAt(0)) === -1 ? str : '';
+  for (var i = 0; i < str.length; i++) {
+    if (whitespace.indexOf(str.charAt(i)) === -1) {
+    str = str.substring(i);
+    break;
+    }
+  }
+  for (i = str.length - 1; i >= 0; i--) {
+    if (whitespace.indexOf(str.charAt(i)) === -1) {
+      str = str.substring(0, i + 1);
+      break;
+      }
+  }
+  return whitespace.indexOf(str.charAt(0)) === -1 ? str : '';
 }// }}}
 
 
@@ -1185,6 +1180,8 @@ function print_r( array, return_val ) {
         return output;
     }
 }// }}}
+
+
 // {{{ is_array
 function is_array( mixed_var ) {
     // Finds whether a variable is an array
@@ -1233,7 +1230,7 @@ function is_array( mixed_var ) {
  * addarray['entryType']          = 'Article';
  * addarray['cite']               = 'art2';
  * addarray['title']              = 'Titel2';
- * addarray['author']			  = [];
+ * addarray['author']       = [];
  * addarray['author'][0]['first'] = 'John';
  * addarray['author'][0]['last']  = 'Doe';
  * addarray['author'][1]['first'] = 'Jane';
@@ -1254,7 +1251,7 @@ function is_array( mixed_var ) {
 function BibTex(options)
 {
 
-	if ( typeof options == 'undefined' ) options = {};
+  if ( typeof options == 'undefined' ) options = {};
     /**
      * Array with the BibTex Data
      *
@@ -1328,47 +1325,47 @@ function BibTex(options)
     
     this._delimiters     = {'"':'"',
                                         '{':'}'};
-	this.data            = [];
-	this.content         = '';
-	//this._stripDelimiter = stripDel;
-	//this._validate       = val;
-	this.warnings        = [];
-	this._options        = {
-		'stripDelimiter'    : true,
-		'validate'          : true,
-		'unwrap'            : false,
-		'wordWrapWidth'     : false,
-		'wordWrapBreak'     : "\n",
-		'wordWrapCut'       : 0,
-		'removeCurlyBraces' : false,
-		'extractAuthors'    : true
-	};
-	for (option in options) {
-		test = this.setOption(option, options[option]);
-		if (this.isError(test)) {
-			//Currently nothing is done here, but it could for example raise an warning
-		}
-	}
-	this.rtfstring         = 'AUTHORS, "{\b TITLE}", {\i JOURNAL}, YEAR';
+  this.data            = [];
+  this.content         = '';
+  //this._stripDelimiter = stripDel;
+  //this._validate       = val;
+  this.warnings        = [];
+  this._options        = {
+    'stripDelimiter'    : true,
+    'validate'          : true,
+    'unwrap'            : false,
+    'wordWrapWidth'     : false,
+    'wordWrapBreak'     : "\n",
+    'wordWrapCut'       : 0,
+    'removeCurlyBraces' : false,
+    'extractAuthors'    : true
+  };
+  for (option in options) {
+    test = this.setOption(option, options[option]);
+    if (this.isError(test)) {
+      //Currently nothing is done here, but it could for example raise an warning
+    }
+  }
+  this.rtfstring         = 'AUTHORS, "{\b TITLE}", {\i JOURNAL}, YEAR';
     this.googlestring        = 'AUTHORS, "TITLE", JOURNAL, YEAR';
-	this.htmlstring        = 'AUTHORS, "<strong>TITLE</strong>", <em>JOURNAL</em>, YEAR<br />';
-	this.allowedEntryTypes = array(
-		'article',
-		'book',
-		'booklet',
-		'confernce',
-		'inbook',
-		'incollection',
-		'inproceedings',
-		'manual',
-		'masterthesis',
-		'misc',
-		'phdthesis',
-		'proceedings',
-		'techreport',
-		'unpublished'
-	);
-	this.authorstring = 'VON LAST, JR, FIRST';
+  this.htmlstring        = 'AUTHORS, "<strong>TITLE</strong>", <em>JOURNAL</em>, YEAR<br />';
+  this.allowedEntryTypes = array(
+    'article',
+    'book',
+    'booklet',
+    'confernce',
+    'inbook',
+    'incollection',
+    'inproceedings',
+    'manual',
+    'masterthesis',
+    'misc',
+    'phdthesis',
+    'proceedings',
+    'techreport',
+    'unpublished'
+  );
+  this.authorstring = 'VON LAST, JR, FIRST';
     
 }
 
@@ -1423,7 +1420,7 @@ BibTex.prototype = {
             return PEAR::raiseError('Could not find file '+filename);
         }
     }
-	*/
+  */
     /**
      * Parses what is stored in content and clears the content if the parsing is successfull+
      *
@@ -1432,7 +1429,7 @@ BibTex.prototype = {
      */
     parse: function()
     {
-    	//alert("starting to parse");
+      //alert("starting to parse");
         //The amount of opening braces is compared to the amount of closing braces
         //Braces inside comments are ignored
         this.warnings = [];
@@ -1828,10 +1825,53 @@ BibTex.prototype = {
             var von      = '';
             var last     = '';
             var jr       = '';
+            
+          //comprobar si existen posible acentos              
+          if (author.indexOf("{\'a}") >= 0){
+            author = author.replace("{\\'a}", "á");
+          }else if (author.indexOf("\'{a}") >= 0){
+            author = author.replace("\\'{a}", "á");
+          }else if (author.indexOf("\'a") >= 0){
+            author = author.replace("\\'a", "á");
+          }
+          
+          if (author.indexOf("{\'e}") >= 0){
+            author = author.replace("{\\'e}", "é");
+          }else if (author.indexOf("\'{e}") >= 0){
+            author = author.replace("\\'{e}", "é");
+          }else if (author.indexOf("\'e") >= 0){
+            author = author.replace("\\'e", "é");
+          } 
+          
+          if (author.indexOf("{\'i}") >= 0){
+            author = author.replace("{\\'i}", "í");
+          }else if (author.indexOf("\'{i}") >= 0){
+            author = author.replace("\\'{i}", "í");
+          }else if (author.indexOf("\'i") >= 0){
+            author = author.replace("\\'i", "í");
+          } 
+          
+          if (author.indexOf("{\'o}") >= 0){
+            author = author.replace("{\\'o}", "ó");
+          }else if (author.indexOf("\'{o}") >= 0){
+            author = author.replace("\\'{o}", "ó");
+          }else if (author.indexOf("\'o") >= 0){
+            author = author.replace("\\'o", "ó");
+          } 
+          
+          if (author.indexOf("{\'u}") >= 0){
+            author = author.replace("{\\'u}", "ú");
+          }else if (author.indexOf("\'{u}") >= 0){
+            author = author.replace("\\'{u}", "ú");
+          }else if (author.indexOf("\'u") >= 0){
+            author = author.replace("\\'u", "ú");
+          } 
+              
+          
             if (strpos(author, ',') === false) {
                 var tmparray = array();
                 //tmparray = explode(' ', author);
-                tmparray = split(' |~', author);
+                tmparray = split(' ', author);
                 var size     = sizeof(tmparray);
                 if (1 == size) { //There is only a last
                     last = tmparray[0];
@@ -1888,6 +1928,8 @@ BibTex.prototype = {
                     last += ' '+tmparray[size-1];
                 }
             } else { //Version 2 and 3
+              
+                             
                 var tmparray     = array();
                 tmparray     = explode(',', author);
                 //The first entry must contain von and last
@@ -1987,7 +2029,7 @@ BibTex.prototype = {
     
     
     'isError': function(obj){
-    	return ( typeof(obj) == 'Object' && obj.isError == 1 );
+      return ( typeof(obj) == 'Object' && obj.isError == 1 );
     
     },
 
@@ -2077,7 +2119,7 @@ BibTex.prototype = {
      */
     '_generateWarning': function(type, entry, wholeentry)
     {
-    	if ( typeof wholeentry == 'undefined' ) wholeentry = '';
+      if ( typeof wholeentry == 'undefined' ) wholeentry = '';
         warning['warning']    = type;
         warning['entry']      = entry;
         warning['wholeentry'] = wholeentry;
@@ -2147,7 +2189,7 @@ BibTex.prototype = {
         } else {
             array['first'] = trim(array['first']);
         }
-        ret = this.authorstring;
+        var ret = this.authorstring;
         ret = str_replace("VON", array['von'], ret);
         ret = str_replace("LAST", array['last'], ret);
         ret = str_replace("JR", array['jr'], ret);
@@ -2167,12 +2209,12 @@ BibTex.prototype = {
     {
         var bibtex = '';
         for (var i=0 ; i<this.data.length; i++) {
-        	var entry = this.data[i];
+          var entry = this.data[i];
             //Intro
             bibtex += '@'+strtolower(entry['entryType'])+' { '+entry['cite']+",\n";
             //Other fields except author
             for (key in entry) {
-            	var val = entry[key];
+              var val = entry[key];
                 if (this._options['wordWrapWidth']>0) {
                     val = this._wordWrap(val);
                 }
@@ -2185,7 +2227,7 @@ BibTex.prototype = {
                 if (this._options['extractAuthors']) {
                     tmparray = array(); //In this array the authors are saved and the joind with an and
                     for (j in entry['author']) {
-                    	var authorentry = entry['author'][j];
+                      var authorentry = entry['author'][j];
                         tmparray[tmparray.length] = this._formatAuthor(authorentry);
                     }
                     author = join(' and ', tmparray);
@@ -2226,7 +2268,7 @@ BibTex.prototype = {
     {
         var ret = array();
         for (var i=0; i<this.data.length; i++) {
-        	var entry = this.data[i];
+          var entry = this.data[i];
             if (array_key_exists(entry['entryType'], ret)) {
                 ret[entry['entryType']]++;
             } else {
@@ -2254,7 +2296,7 @@ BibTex.prototype = {
     {
         var ret = "{\\rtf\n";
         for (var i=0; i<this.data.length; i++) {
-        	var entry = this.data[i];
+          var entry = this.data[i];
             line    = this.rtfstring;
             title   = '';
             journal = '';
@@ -2273,7 +2315,7 @@ BibTex.prototype = {
                 if (this._options['extractAuthors']) {
                     tmparray = array(); //In this array the authors are saved and the joind with an and
                     for (var j in entry['author']) {
-                    	var authorentry = entry['author'][j];
+                      var authorentry = entry['author'][j];
                         tmparray[tmparray.length] = this._formatAuthor(authorentry);
                     }
                     authors = join(', ', tmparray);
@@ -2311,11 +2353,11 @@ BibTex.prototype = {
      */
     'html': function(min,max)
     {
-    	if ( typeof min == 'undefined' ) min = 0;
-    	if ( typeof max == 'undefined' ) max = this.data.length;
+      if ( typeof min == 'undefined' ) min = 0;
+      if ( typeof max == 'undefined' ) max = this.data.length;
         var ret = "<p>\n";
         for (var i =min; i<max; i++){
-        	var entry = this.data[i];
+          var entry = this.data[i];
             var line    = this.htmlstring;
             var title   = '';
             var journal = '';
@@ -2334,7 +2376,7 @@ BibTex.prototype = {
                 if (this._options['extractAuthors']) {
                     tmparray = array(); //In this array the authors are saved and the joind with an and
                     for (j in entry['author'] ) {
-                    	var authorentry = entry['author'][j];
+                      var authorentry = entry['author'][j];
                         tmparray[tmparray.length] = this._formatAuthor(authorentry);
                     }
                     authors = join(', ', tmparray);
@@ -2365,6 +2407,7 @@ BibTex.prototype = {
       var journal = '';
       var year    = '';
       var authors = '';
+      
       if (array_key_exists('title', entry)) {
         title = this._unwrap(entry['title']);
       }
