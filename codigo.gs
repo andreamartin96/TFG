@@ -76,10 +76,10 @@ function getCites(){
   var body = DocumentApp.getActiveDocument().getBody();
   var text = body.getText();
   
-  var r1 = /[\x00-\x7F]/g;
-  var r2 = /cite/;
+  //var r1 = /\/g;
+  var r2 = /\\cite/g;
   var r3 = /\{/;
-  var r4 = /\w{1,40}/;
+  var r4 = /\w{1,40}/;                  // NO FUNCIONA DEL TODO BIEN, EJEMPLO DE ID QUE NO IDENTIFICA: Krinke:2003:CSC
   var r5 = /\}/;
   
   /* var r1 = /\\/g;
@@ -87,7 +87,7 @@ function getCites(){
   var r5 = /\w/;
   var r6 = /\}/;*/
   
-  var r6 = new RegExp(r1.source + r2.source + r3.source + r4.source + r5.source, (r1.global ? 'g' : '') + (r1.ignoreCase ? 'i' : '') + (r1.multiline ? 'm' : ''));
+  var r6 = new RegExp(r2.source + r3.source + r4.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
   var solutionArray = [];
       
   solutionArray = text.match(r6);
@@ -105,13 +105,14 @@ function getCites(){
 }
 
 function getId(solutionArray){
+  var newArray = new Array();
   for(var i = 0; i < solutionArray.length; i++){
       
       var strL = solutionArray[i].length;
-      solutionArray[i] = solutionArray[i].slice(6, strL - 1);
+      newArray[i] = solutionArray[i].slice(6, strL - 1);
       
     }
-  return solutionArray;
+  return newArray;
 }
 
 function getText(){
@@ -131,31 +132,90 @@ function getText(){
   return cad;
 }
 
+function prueba2(){
+  var doc = DocumentApp.getActiveDocument();
+  var body = DocumentApp.getActiveDocument().getBody();
+  
+  // Append a section header paragraph.
+  var section = body.appendParagraph("Section 1");
+  section.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  
+  // Append a regular paragraph.
+  body.appendParagraph("This is a typical paragraph.");
+  
+  doc.saveAndClose();
+  
+}
+
+function prueba(){
+   
+  var placeHolder = "bibliography";
+  
+  var d = DocumentApp.getActiveDocument()
+  var s = d.getBody();
+  var result = s.findText(placeHolder); 
+  var placeholderStart = result.getStartOffset(); 
+  var par = s.getChild(0).asParagraph();
+  var parcopy = par.copy();
+  var parLen = par.editAsText().getText().length-1;
+  Logger.log('placeholderStart = '+placeholderStart+'  parLen = '+parLen)
+  par.editAsText().deleteText(placeholderStart, parLen);
+  parcopy.editAsText().deleteText(0, placeholderStart+placeHolder.length);
+  var section = s.getChild(0).appendParagraph("Section 1");
+  
+  section.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  
+  // Append a regular paragraph.
+  var paragraph = s.getChild(1).appendParagraph("This is a typical paragraph.");  
+  //s.appendParagraph(parcopy);
+  parcopy.merge(); 
+  d.saveAndClose();
+  
+   var prueba = "";
+}
+
 function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
   var bibtexDoc = [];
   var lo = arrayCitesId.length;
-  var exito = false;
+  var exito = true;
   for(var i = 0; i < arrayCitesId.length; i++){
     var idBibtex = arrayCitesId[i];
     bibtexDoc[i] = JSON.stringify(bibtex_dict[idBibtex]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
   }
   
+  /*
+   for(var j = 0; j < arrayCitesId.length; j++){  
+    var r2 = /\\cite/g;
+    var r3 = /\{/;                                           //POSIBLE SOLUCION!! SIGO PROBANDO A VER SI CONSIGO BORRAR LA \
+    var r5 = /\}/;
+    var cite = arrayCitesId[j];
+    var replacement = "[" + j.toString() + "]";
+    var toSearch = new RegExp(r2.source + r3.source + cite.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
+    //var toSearch = "cite{" + cite + "}";
+    if(body2.editAsText().replaceText(toSearch,replacement) === null){
+      exito = false;
+    }
+
+  */
+  
   for(var j = 0; j < arrayCitesId.length; j++){  
     var cite = arrayCitesId[j];
     var replacement = "[" + j.toString() + "]";
-    var toSearch = "[[:92:]]cite{" + cite + "}";
-    body2.editAsText().replaceText(toSearch,replacement);
+    var toSearch = "cite{" + cite + "}";
+    if(body2.editAsText().replaceText(toSearch,replacement) === null){
+      exito = false;
+    }
 
   }
-  body2.appendHorizontalRule();
+  
+ /*body2.appendHorizontalRule();
   for(var i = 0; i < arrayCitesId.length; i++){  
     var cite = arrayCitesId[i];
     var text = "[" + i.toString() + "]      ----     " + bibtex_dict[cite]["title"] + " | " + bibtex_dict[cite]["authors"] + " | " + bibtex_dict[cite]["year"];
     body2.appendParagraph(text);
 
-  }
+  }*/
   doc.saveAndClose();
-  exito = true;
   return exito;
 }
 
@@ -237,7 +297,7 @@ function getBibtexAndDoc(e){
   var doc = DocumentApp.openById(newIdDoc);
   var body = doc.getBody();
   var texto = body.getText();
-  var exito = sustitute(arrayCites, arrayCitesId, body, bibtex_dict, doc);
+  var exito = sustitute(arrayCites, arrayCitesId, body, outobj, doc);
   
   return exito;
 }
@@ -2403,12 +2463,229 @@ BibTex.prototype = {
     {
       var entry = this.data[pos];
       var line    = this.googlestring;
-      var title   = '';
-      var journal = '';
-      var year    = '';
-      var authors = '';
       
-      if (array_key_exists('title', entry)) {
+      var ret = {}      
+      
+      switch(entry['entryType']){           //  PARA LOS DISTINTOS TIPOS DE ENTRADA(BOOK, ARTICLE...) CREAR LOS DIFERENTES CAMPOS POSIBLES Y SI EXISTEN AÑADIRLOS
+                                            //  A ret QUE ES EL RESULTADO QUE SE DEVOLVERÁ (UN OBJETO CON UNA CLAVE POR CADA CAMPO EXISTENTE EN EL .bib)
+        case "book":
+          if (array_key_exists('title', entry)) {
+            ret.title = this._unwrap(entry['title']);
+          }
+          if (array_key_exists('publisher', entry)) {
+            ret.publisher = this._unwrap(entry['publisher']);
+          }
+          if (array_key_exists('month', entry)) {
+            
+            var month = this._unwrap(entry['month']);
+            switch(month){
+              case 'jan':
+                month = 'January';
+              break;
+              case 'feb':
+                month = 'February';
+              break;
+              case 'mar':
+                month = 'March';
+              break;
+              case 'apr':
+                month = 'April';
+              break;
+              case 'may':
+                month = 'May';
+              break;
+              case 'jun':
+                month = 'June';
+              break;
+              case 'jul':
+                month = 'July';
+              break;
+              case 'aug':
+                month = 'August';
+              break;
+              case 'sep':
+                month = 'September';
+              break;
+              case 'oct':
+                month = 'October';
+              break;
+              case 'nov':
+                month = 'November';
+              break;
+              case 'dec':
+                month = 'December';
+              break;
+              default:
+                //nothing               
+            }
+            ret.month = month;
+          }
+          if (array_key_exists('year', entry)) {
+            ret.year = this._unwrap(entry['year']);
+          }
+          if (array_key_exists('author', entry)) {
+            ret.authors = entry['author'];
+          }
+          if (array_key_exists('series', entry)) {
+            ret.series = this._unwrap(entry['series']);
+          }
+          if (array_key_exists('volume', entry)) {
+            ret.volume = this._unwrap(entry['volume']);
+          }
+          if (array_key_exists('isbn', entry)) {
+            ret.isbn = this._unwrap(entry['isbn']);
+          }
+          if (array_key_exists('issn', entry)) {
+            ret.issn = this._unwrap(entry['issn']);
+          }
+          if (array_key_exists('pages', entry)) {
+            ret.pages = this._unwrap(entry['pages']);
+          }
+          if (array_key_exists('address', entry)) {
+            ret.address = this._unwrap(entry['address']);
+          }
+          if (array_key_exists('note', entry)) {
+            ret.note = this._unwrap(entry['note']);
+          }
+          if (array_key_exists('editor', entry)) {
+            ret.editor = this._unwrap(entry['editor']);
+          }
+          if (array_key_exists('date_added', entry)) {
+            ret.date_added = this._unwrap(entry['date_added']);
+          }
+          if (array_key_exists('date_modified', entry)) {
+            ret.date_modified = this._unwrap(entry['date_modified']);
+          }
+          if (array_key_exists('crossrefonly', entry)) {
+            ret.crossrefonly = this._unwrap(entry['crossrefonly']);
+          }
+          if (array_key_exists('booktitle', entry)) {
+            ret.booktitle = this._unwrap(entry['booktitle']);
+          }
+          if (array_key_exists('number', entry)) {
+            ret.number = this._unwrap(entry['number']);
+          }
+          if (array_key_exists('key', entry)) {
+            key = this._unwrap(entry['key']);
+          }
+          if (array_key_exists('annote', entry)) {
+            ret.annote = this._unwrap(entry['annote']);
+          }
+          
+          return ret;                 
+        break;
+        case "article":                                
+          if (array_key_exists('numpages', entry)) {
+            ret.numpages = this._unwrap(entry['numpages']);
+          }
+          if (array_key_exists('issue_date', entry)) {
+            ret.issue_date = this._unwrap(entry['issue_date']);
+          }
+          if (array_key_exists('url', entry)) {
+            ret.url = this._unwrap(entry['url']);
+          }
+          if (array_key_exists('doi', entry)) {
+            ret.doi = this._unwrap(entry['doi']);
+          }
+          if (array_key_exists('acmid', entry)) {
+            ret.acmid = this._unwrap(entry['acmid']);
+          }
+          if (array_key_exists('title', entry)) {
+            ret.title = this._unwrap(entry['title']);
+          }
+          if (array_key_exists('publisher', entry)) {
+            ret.publisher = this._unwrap(entry['publisher']);
+          }
+          if (array_key_exists('month', entry)) {
+            var month = this._unwrap(entry['month']);
+            switch(month){
+              case 'jan':
+                month = 'January';
+              break;
+              case 'feb':
+                month = 'February';
+              break;
+              case 'mar':
+                month = 'March';
+              break;
+              case 'apr':
+                month = 'April';
+              break;
+              case 'may':
+                month = 'May';
+              break;
+              case 'jun':
+                month = 'June';
+              break;
+              case 'jul':
+                month = 'July';
+              break;
+              case 'aug':
+                month = 'August';
+              break;
+              case 'sep':
+                month = 'September';
+              break;
+              case 'oct':
+                month = 'October';
+              break;
+              case 'nov':
+                month = 'November';
+              break;
+              case 'dec':
+                month = 'December';
+              break;
+              default:
+                //nothing               
+            }
+            ret.month = month;
+          }
+          if (array_key_exists('year', entry)) {
+            ret.year = this._unwrap(entry['year']);
+          }
+          if (array_key_exists('author', entry)) {
+            ret.authors = entry['author'];
+          }
+          if (array_key_exists('journal', entry)) {
+            ret.journal = this._unwrap(entry['journal']);
+          }
+          if (array_key_exists('volume', entry)) {
+            ret.volume = this._unwrap(entry['volume']);
+          }
+          if (array_key_exists('issn', entry)) {
+            ret.issn = this._unwrap(entry['issn']);
+          }
+          if (array_key_exists('pages', entry)) {
+            ret.pages = this._unwrap(entry['pages']);
+          }
+          if (array_key_exists('address', entry)) {
+            ret.address = this._unwrap(entry['address']);
+          }
+          if (array_key_exists('number', entry)) {
+            ret.number = this._unwrap(entry['number']);
+          }
+          if (array_key_exists('keywords', entry)) {
+            ret.keywords = this._unwrap(entry['keywords']);
+          }
+          if (array_key_exists('articleno', entry)) {
+            ret.articleno = this._unwrap(entry['articleno']);
+          }
+          
+          return ret;
+        break;
+        case "inproceedings":
+        
+        break;
+        case "misc":
+        
+        break;
+        case "mastersthesis":
+        
+        break;
+        default:
+      }
+      
+      /*if (array_key_exists('title', entry)) {
         title = this._unwrap(entry['title']);
       }
       if (array_key_exists('journal', entry)) {
@@ -2429,7 +2706,7 @@ BibTex.prototype = {
           authors = entry['author'];
         }
       }
-      return {title: title, journal: journal, year: year, authors: authors}
+      return {title: title, journal: journal, year: year, authors: authors}*/
       /*
       if ((''!=title) || (''!=journal) || (''!=year) || (''!=authors)) {
         return {title: title, journal: journal, year: year, authors: authors}
