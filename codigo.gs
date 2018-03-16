@@ -145,7 +145,9 @@ function getText(){
   return cad;
 }
 
-function prueba2(){
+/*
+
+function prueba3(){
   var doc = DocumentApp.getActiveDocument();
   var body = DocumentApp.getActiveDocument().getBody();
   
@@ -158,6 +160,42 @@ function prueba2(){
   
   doc.saveAndClose();
   
+}
+
+function prueba2(){
+  var doc = DocumentApp.getActiveDocument();
+  var body = doc.getBody();
+  
+  //var r = /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/gmi;
+
+  var j = 0;
+  var replacement = "[" + j.toString() + "]";
+  //var toSearch = new RegExp(r2.source + r3.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
+  //var toSearch = "\cite{" + cite + "}";
+  body.editAsText().replaceText(r,replacement);
+  doc.saveAndClose();
+  var prueba = 0;
+}
+
+
+function prueba1(){
+  
+  var d = DocumentApp.getActiveDocument()
+  var b = d.getBody();
+  var cites = getCites();
+  var ids = getId(cites);
+  var j = 0;
+  //for(var j = 0; j < ids.length; j++){  
+    var clave = ids[j];
+    clave = "\\cite{" + clave + "}";
+    var replacement = "[" + j.toString() + "]";
+    var claveToRegex = new RegExp(clave);
+    claveToRegex = /\\cite{hola}/;
+    claveToRegex = new RegExp(claveToRegex);
+    b.editAsText().replaceText(claveToRegex,replacement);
+  //}
+  d.saveAndClose();
+  var texto = 0;
 }
 
 function prueba(){
@@ -187,19 +225,7 @@ function prueba(){
    var prueba = "";
 }
 
-
-function prueba3(){
-  var doc = DocumentApp.getActiveDocument();
-  var body = doc.getBody();
- 
-  var j = 0;
-  var replacement = "[" + j.toString() + "]";
-  //var toSearch = new RegExp(r2.source + r3.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
-  //var toSearch = "\cite{" + cite + "}";
-  body.editAsText().replaceText(r,replacement);
-  doc.saveAndClose();
-  var prueba = 0;
-}
+*/
 
 //VERSION ANTIGUA
 
@@ -223,9 +249,6 @@ function prueba3(){
   exito = true;
   return exito;
 }*/
-
-
-
 
 
 function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
