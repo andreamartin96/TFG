@@ -76,27 +76,40 @@ function getCites(){
   var body = DocumentApp.getActiveDocument().getBody();
   var text = body.getText();
   
-  //var r1 = /\/g;
-  var r2 = /\\cite/g;
-  var r3 = /\{/;
-  var r4 = /\w{1,40}/;                  // NO FUNCIONA DEL TODO BIEN, EJEMPLO DE ID QUE NO IDENTIFICA: Krinke:2003:CSC
-  var r5 = /\}/;
+  /*NUEVA EXPRESION REGULAR HECHA. POSIBLE COMBINACIONES DE CLAVES QUE IDENTIFICA:
   
-  /* var r1 = /\\/g;
-  var r4 = /\{/;
-  var r5 = /\w/;
-  var r6 = /\}/;*/
+  \cite{hola:16}
+  \cite{hola}
+  \cite{Caballero2015104}
+  \cite{pedersen2012error}
+  \cite{Agha:1986:AMC}
+  \cite{ho-la}
+  \cite{h_ola}
+  \cite{Agha:al1986}
+  \cite{Aer1986:AMC}
   
-  var r6 = new RegExp(r2.source + r3.source + r4.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
+  
+  EXPLICACION DE LA REGEX: 
+  
+  - \w{1, 40}   ---->  identifica una palabra de 1 a 40 letras
+  - \d{1, 40}   ---->  identifica una palabra de 1 a 40 digitos
+  -  ( | )    ---->  OR logica
+  -  \\    ---->  caracter especial \
+  
+  */
+  
+  var r = /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/gmi;
+  var regex = new RegExp(r);
+  
   var solutionArray = [];
       
-  solutionArray = text.match(r6);
+  solutionArray = text.match(regex);
   
   
   if(solutionArray){
     
   }else{
-    cad = "Error during the proccess!! Could be a problem in your active document. Check it";
+    cad = "Error";
     solutionArray[0] = cad;
   }
   
@@ -118,7 +131,7 @@ function getId(solutionArray){
 function getText(){
   var i = 0;
   var auxArray = [];
-  var cad = ""; // cad coteins all \cite. It is used to test!!!!!!
+  var cad = ""; // cad contiene todos los \cite (usado para testear)
   var length  = 0;
   length = solutionArray.length;
   
@@ -174,6 +187,47 @@ function prueba(){
    var prueba = "";
 }
 
+
+function prueba3(){
+  var doc = DocumentApp.getActiveDocument();
+  var body = doc.getBody();
+ 
+  var j = 0;
+  var replacement = "[" + j.toString() + "]";
+  //var toSearch = new RegExp(r2.source + r3.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
+  //var toSearch = "\cite{" + cite + "}";
+  body.editAsText().replaceText(r,replacement);
+  doc.saveAndClose();
+  var prueba = 0;
+}
+
+//VERSION ANTIGUA
+
+/*function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
+  var bibtexDoc = [];
+  var lo = arrayCitesId.length;
+  var exito = false;
+  for(var i = 0; i < arrayCitesId.length; i++){
+    var idBibtex = arrayCitesId[i];
+    bibtexDoc[i] = JSON.stringify(bibtex_dict[idBibtex]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
+  }
+  
+  for(var j = 0; j < arrayCitesId.length; j++){  
+    var cite = arrayCitesId[j];
+    var replacement = "[" + j.toString() + "]";
+    var toSearch = "\cite{" + cite + "}";
+    body2.editAsText().replaceText(toSearch,replacement);
+
+  }
+  doc.saveAndClose();
+  exito = true;
+  return exito;
+}*/
+
+
+
+
+
 function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
   var bibtexDoc = [];
   var lo = arrayCitesId.length;
@@ -183,20 +237,22 @@ function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
     bibtexDoc[i] = JSON.stringify(bibtex_dict[idBibtex]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
   }
   
-  /*
    for(var j = 0; j < arrayCitesId.length; j++){  
-    var r2 = /\\cite/g;
-    var r3 = /\{/;                                           //POSIBLE SOLUCION!! SIGO PROBANDO A VER SI CONSIGO BORRAR LA \
+     var regex = /\/cite\{/  
+    var r2 = /\/cite/g;
+    var r3 = /\{/;                                         //POSIBLE SOLUCION!! SIGO PROBANDO A VER SI CONSIGO BORRAR LA \
     var r5 = /\}/;
     var cite = arrayCitesId[j];
+    cite = "/" + cite + "/";
     var replacement = "[" + j.toString() + "]";
-    var toSearch = new RegExp(r2.source + r3.source + cite.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
+    var toSearch = new RegExp(regex.source + cite + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
     //var toSearch = "cite{" + cite + "}";
     if(body2.editAsText().replaceText(toSearch,replacement) === null){
       exito = false;
     }
-
-  */
+   }
+   
+   /*
   
   for(var j = 0; j < arrayCitesId.length; j++){  
     var cite = arrayCitesId[j];
@@ -207,6 +263,8 @@ function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
     }
 
   }
+   
+  */
   
  /*body2.appendHorizontalRule();
   for(var i = 0; i < arrayCitesId.length; i++){  
@@ -1873,8 +1931,8 @@ BibTex.prototype = {
      * @param string entry The entry with the authors
      * @return array the extracted authors
      */
-    '_extractAuthors': function(entry) {
-        entry       = this._unwrap(entry);
+  '_extractAuthors': function(entry) {  // FUNCIONA MAL PARA AQUELLOS CASOS EN EL QUE LA PARTE FIRST LA PRIMERA LETRA  
+        entry       = this._unwrap(entry);  // TIENE UNA TILDE -> EJEMPLO: Íñigo
         var authorarray = array();
         authorarray = split(' and ', entry);
         for (var i = 0; i < sizeof(authorarray); i++) {
@@ -1950,7 +2008,7 @@ BibTex.prototype = {
                                 // IGNORE?
                             } else if ((0 == casev) || (-1 == casev)) { //Change from von to last
                                 //You only change when there is no more lower case there
-                                islast = true;
+                                 var islast = true;
                                 for (var k=(j+1); k<(size-1); k++) {
                                     futurecase = this._determineCase(tmparray[k]);
                                     if (this.isError(casev)) {
@@ -2459,6 +2517,42 @@ BibTex.prototype = {
         ret += "</p>\n";
         return ret;
     },
+  'checkRequieredFields' : function(entry, ret)
+   {
+     var exito = true;
+     if (array_key_exists('title', entry)) {
+       //obligar a que exista
+       ret.title = this._unwrap(entry['title']);
+     }
+     else{
+       exito = false;
+     }
+     if (array_key_exists('publisher', entry)) {
+       ret.publisher = this._unwrap(entry['publisher']);
+     }
+     else{
+       exito = false;
+     }
+     if (array_key_exists('year', entry)) {
+       ret.year = this._unwrap(entry['year']);
+     }
+     else{
+       exito = false;
+     }
+     //Existe alguno de los dos??
+     if (array_key_exists('editor', entry) || array_key_exists('author', entry)) {
+       if (array_key_exists('author', entry)) { //
+         ret.authors = entry['author'];
+       }
+       if (array_key_exists('editor', entry)) {
+         ret.editor = this._unwrap(entry['editor']);
+       }
+       
+     }else{
+       exito = false;
+     }
+     return exito;
+    },
   'google': function(pos)
     {
       var entry = this.data[pos];
@@ -2466,15 +2560,22 @@ BibTex.prototype = {
       
       var ret = {}      
       
-      switch(entry['entryType']){           //  PARA LOS DISTINTOS TIPOS DE ENTRADA(BOOK, ARTICLE...) CREAR LOS DIFERENTES CAMPOS POSIBLES Y SI EXISTEN AÑADIRLOS
-                                            //  A ret QUE ES EL RESULTADO QUE SE DEVOLVERÁ (UN OBJETO CON UNA CLAVE POR CADA CAMPO EXISTENTE EN EL .bib)
+      switch(entry['entryType']){
+        
         case "book":
-          if (array_key_exists('title', entry)) {
-            ret.title = this._unwrap(entry['title']);
-          }
-          if (array_key_exists('publisher', entry)) {
-            ret.publisher = this._unwrap(entry['publisher']);
-          }
+          
+          //CAMPOS OBLIGATORIOS: author or editor, title, publisher, year
+          //CAMPOS OPCIONALES: resto...
+          
+          var exito = this.checkRequieredFields(entry, ret);
+         
+         /* try {
+             if(!exito){
+               throw ("Error: Faltan campos obligatorios en el .bib, comprueba que estan todos los campos siguientes: author or editor, title, publisher, year");
+             }
+          } catch(e) {
+            alert("Error: Faltan campos obligatorios en el .bib, comprueba que estan todos los campos siguientes: author or editor, title, publisher, year");
+          }*/
           if (array_key_exists('month', entry)) {
             
             var month = this._unwrap(entry['month']);
@@ -2520,12 +2621,7 @@ BibTex.prototype = {
             }
             ret.month = month;
           }
-          if (array_key_exists('year', entry)) {
-            ret.year = this._unwrap(entry['year']);
-          }
-          if (array_key_exists('author', entry)) {
-            ret.authors = entry['author'];
-          }
+          
           if (array_key_exists('series', entry)) {
             ret.series = this._unwrap(entry['series']);
           }
@@ -2547,9 +2643,7 @@ BibTex.prototype = {
           if (array_key_exists('note', entry)) {
             ret.note = this._unwrap(entry['note']);
           }
-          if (array_key_exists('editor', entry)) {
-            ret.editor = this._unwrap(entry['editor']);
-          }
+          
           if (array_key_exists('date_added', entry)) {
             ret.date_added = this._unwrap(entry['date_added']);
           }
@@ -2718,3 +2812,17 @@ BibTex.prototype = {
       */
     }
 };
+
+/*
+
+REFERENCIAS:
+
+FORMATO PARA EL CAMPO AUTHOR: https://www.tug.org/TUGboat/tb27-2/tb87hufflen.pdf
+
+INFORMACION DE LOS CAMPOS DE UN .bib: https://es.wikipedia.org/wiki/BibTeX
+
+PÁGINA ONLINE PARA PROBAR EXPRESIONES REGULARES: https://regex101.com/r/vNZNnz/4
+
+DOCUMENTACIÓN SOBRE BIBTEX: ftp://ftp.ctan.org/tex-archive/info/spanish/guia-bibtex/guia-bibtex.pdf
+
+*/
