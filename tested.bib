@@ -1,0 +1,97 @@
+
+//ejemplo para probar que funciona la identificacion de las partes en los nombre de los autores (von, first, last y jr).
+//para probar tambien si transforma Adri\'an en Adrián.
+//para probar tambien si pasea correctamente el mes.
+
+//cfactor problematico: Íñigo
+
+@article{Krinke:2003:CSC,
+ author = {Inigo de la Serna and Enrique Martin-Martin and Adri\'an Riesco and Rogier van der Weyden and Charles de la Croix and Giacomo della Porta},
+ title = {Context-sensitive Slicing of Concurrent Programs},
+ journal = {SIGSOFT Softw. Eng. Notes},
+ issue_date = {September 2003},
+ volume = {28},
+ number = {5},
+ month = sep,
+ year = {2003},
+ issn = {0163-5948},
+ pages = {178--187},
+ numpages = {10},
+ doi = {10.1145/949952.940096},
+ acmid = {940096},
+ publisher = {ACM},
+ keywords = {concurrency, context-sensitive, parallelism, program analysis, program slicing},
+ 
+}
+
+//ejemplo para probar el campo title
+
+@book{LearnYouSomeErlang,
+	author = {Fred Hebert},
+	title = {{L}earn {Y}ou {S}ome {E}rlang for {G}reat {G}ood!: {A} {B}eginner's {G}uide},
+	publisher = {No Starch Press},
+	year = {2013},
+	note = {Also available at \url{http://learnyousomeerlang.com}}
+} 
+
+/* regex utilizada: /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/
+
+CLAVES PROBADAS Y QUE FUNCIONAN:
+
+\cite{hola:16}
+\cite{hola}
+\cite{Caballero2015104}
+\cite{pedersen2012error}
+\cite{Agha:1986:AMC}
+\cite{ho-la}
+\cite{h_ola}
+\cite{Agha:al1986}
+\cite{Aer1986:AMC}
+
+
+*/
+
+//ejemplo de clave que no funciona(demasiadas combinaciones posibles)
+@article{Dean:2008:MSD:1327452.1327492,
+ author = {Dean, Jeffrey and Ghemawat, Sanjay},
+ title = {MapReduce: Simplified Data Processing on Large Clusters},
+ journal = {Commun. ACM},
+ issue_date = {January 2008},
+ volume = {51},
+ number = {1},
+ month = jan,
+ year = {2008},
+ issn = {0001-0782},
+ pages = {107--113},
+ numpages = {7},
+ url = {http://doi.acm.org/10.1145/1327452.1327492},
+ doi = {10.1145/1327452.1327492},
+ acmid = {1327492},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+} 
+
+//ejemplo de clave que no funciona(demasiadas combinaciones posibles)
+@inproceedings{cgs12a-flops2012,
+ author    = {Rafael Caballero and
+              Yolanda Garc\'{\i}a-Ruiz and
+              Fernando S{\'a}enz-P{\'e}rez},
+ title = {Declarative Debugging of Wrong and Missing Answers for {SQL} Views},
+ booktitle = {11th International Symposium on Functional and Logic Programming
+ (FLOPS 2012)},
+ year = {2012},
+ series = {LNCS},
+ publisher = {Springer-Verlag},
+ volume   = {7294}
+}
+
+
+//ejemplo de entrada que no funciona (falta el campo obligatorio 'year')
+
+@book{Krinke,
+	author = {Blackburn, Patrick and Benthem, Johan F. A. K. van and Wolter, Frank},
+	title = {Handbook of Modal Logic, Volume 3 (Studies in Logic and Practical Reasoning)},,
+	isbn = {0444516905},
+	publisher = {Elsevier Science Inc.},
+	address = {New York, NY, USA},
+}

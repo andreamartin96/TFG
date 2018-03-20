@@ -53,26 +53,8 @@ function showSidebar() {
 * @NotOnlyCurrentDoc
 */
 
-/*function openDoc(e) {
-  var data = {};
-  e = "1Vw9vjUobLNFevt6YLE62oEpcfAIYGQSJ";
-  var idn = e;
-  e = e == "root" ? DriveApp.getRootFolder().getId() : e;
-  data[e] = {};
-  data[e].keyname = DriveApp.getFolderById(e).getName();
-  var url = DriveApp.getFolderById(e).getUrl();
-  //var url = "https://docs.google.com/document/d/"+ e + "/edit";
-  //var doc = DocumentApp.openByUrl(url);
-  //var doc = DocumentApp.openById(e);
-  //var body = doc.getBody().getText();
-  /*var response = UrlFetchApp.fetch(url);
-  var aux = response.get
-  var dataAll = JSON.parse(response.getContentText()); 
-  return aux;
 
-} */
-
-function getCites(){
+function getCites(){ //Obtiene todos los \cite encontrados en el documento actual
   var body = DocumentApp.getActiveDocument().getBody();
   var text = body.getText();
   
@@ -117,7 +99,7 @@ function getCites(){
   return solutionArray;
 }
 
-function getId(solutionArray){
+function getId(solutionArray){  //obtiene todas las claves de los \cites encontrados en el documento actual
   var newArray = new Array();
   for(var i = 0; i < solutionArray.length; i++){
       
@@ -128,7 +110,7 @@ function getId(solutionArray){
   return newArray;
 }
 
-function getText(){
+function getText(){  //transforma todas las citas en una cadena
   var i = 0;
   var auxArray = [];
   var cad = ""; // cad contiene todos los \cite (usado para testear)
@@ -227,7 +209,7 @@ function prueba(){
 
 */
 
-//VERSION ANTIGUA
+//VERSION ANTIGUAde la funcion sustitute
 
 /*function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
   var bibtexDoc = [];
@@ -251,7 +233,7 @@ function prueba(){
 }*/
 
 
-function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
+function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){ //remplaza todos los \cite{id} 
   var bibtexDoc = [];
   var lo = arrayCitesId.length;
   var exito = true;
@@ -300,85 +282,65 @@ function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
   return exito;
 }
 
+//COMPRUEBA SI EN TODOS LOS DOCUMENTOS ENCONTRADOS HUBO EXITO EN SU CREACIÓN (NO FALTA NINGÚN CAMPO OBLIGATORIO)
+
+function checkErrors(bibtex){
+  var i = 0;
+  var errorEncontrado = false;
+  while(i<bibtex.data.length && !errorEncontrado){
+    var outobj = bibtex.google(i);
+    if(outobj['exito'] === false){
+      errorEncontrado = true;
+    }
+    
+    i++;
+  } 
+  return errorEncontrado;
+}
+
+//FUNCION PRINCIPAL QUE QUE ES LLAMA TRAS PULSAR EL BOTON DE "combinar documentos"
+
 function getBibtexAndDoc(e){
   //init the return vars
   
-  e = "1nvTRkIZ0dbHamwv_H9ovn_uPdveB6CRo";
+  e = "1nvTRkIZ0dbHamwv_H9ovn_uPdveB6CRo"; //utilizado para el proceso de testing
   var bibtex_dict = [];
-  
-  
-  //-------------  
-  /* var bibtex_file_ids, doc_file_ids;
-  bibtex_file_ids = ScriptProperties.getProperty("bibtex_file_ids");
-  if (bibtex_file_ids == null) bibtex_file_ids = {};
-  else bibtex_file_ids = JSON.parse(bibtex_file_ids);
-  doc_file_ids = ScriptProperties.getProperty("doc_file_ids");
-  if (doc_file_ids == null) doc_file_ids = {};
-  else doc_file_ids = JSON.parse(doc_file_ids); */
-  //-------------  
-  //go through doc list to find all documents ending with .bib
-  //TODO only iterate through "Documents"
-  /*var doclist = DriveApp.getAllFiles();
-  var bibtex_doc;
-  var found = false;
-  for(var i=0; i<doclist.length; ++i){
-    var dfile = doclist[i];
-    if (dfile.getId() in bibtex_file_ids){
-    //if (dfile.getName().substring(dfile.getName().length-4,dfile.getName().length)=='.bib'){
-      found = true;
-      bibtex_doc = dfile;
-      break;
-    }
-  } */
-  
+
   var bibtex_doc = DriveApp.getFileById(e);
   
   
-  //-------------  
-  //use BibTex javascript at the bottom of this script
+  //usa la nueva clase "BibTex" que se encuentra al final del script
   var bibtex = new BibTex();
-  bibtex.content = bibtex_doc.getBlob().getDataAsString(); // the bibtex content as a string
+  bibtex.content = bibtex_doc.getBlob().getDataAsString(); //El contenido de bibtex como un string
   bibtex.parse();
-  //-------------  
-  //create lookup dict for citations with {'citekey':'citation string: authors, title, ...'}
-  for(var i=0; i<bibtex.data.length; ++i){
-    var outobj = bibtex.google(i);
-    bibtex_dict[bibtex.data[i].cite] = outobj;
-  }
   
-  //-------------  
-  //loop through all documents to find document with title Citation Test, this is just the dev test document
- 
   
-  //var docid;
-  /*for(var i=0; i<doclist.length; ++i){
-    var dfile = doclist[i];
-    if (dfile.getId() in doc_file_ids){
-    //if (dfile.getName() == 'Citation Test'){
-      docid = dfile.getId();
-      break;
+  var errorEncontrado = checkErrors(bibtex); // comprueba si hubo exito en todos los documentos encontrados
+  var exito = false;
+  if(!errorEncontrado){
+    
+    //Crea un diccionario con todos los documentos
+    for(var i=0; i<bibtex.data.length; ++i){
+      var outobj = bibtex.google(i);
+      bibtex_dict[bibtex.data[i].cite] = outobj;
     }
+    
+    var arrayCites = getCites();
+    var arrayCitesId = getId(arrayCites);
+    
+    
+    //var textCites = getText();  // transforma el array en un texto
+    
+    var idDoc = DocumentApp.getActiveDocument().getId(); //id del documento abierto
+    
+    var file = DriveApp.getFileById(idDoc); //archivo que representa el doc abierto
+    var newIdDoc = file.makeCopy("New Document").getId(); //copia del documento, renombrandolo y obteniendo su id
+    //var newFile = DriveApp.getFileById(newIdDoc);
+    var doc = DocumentApp.openById(newIdDoc);
+    var body = doc.getBody();
+    var texto = body.getText();
+    exito = sustitute(arrayCites, arrayCitesId, body, bibtex_dict, doc);
   }
-  if (docid!=undefined) { 
-    var doc = DocumentApp.openById(docid);
-    body = doc.getActiveSection();
-  }*/
-  
-  var arrayCites = getCites();
-  var arrayCitesId = getId(arrayCites);
-  
-  
-  //var textCites = getText();  // transforma el array en un texto
-  
-  var idDoc = DocumentApp.getActiveDocument().getId(); //id del documento abierto
-  
-  var file = DriveApp.getFileById(idDoc); //archivo que representa el doc abierto
-  var newIdDoc = file.makeCopy("New Document").getId(); //copia del documento, renombrandolo y obteniendo su id
-  //var newFile = DriveApp.getFileById(newIdDoc);
-  var doc = DocumentApp.openById(newIdDoc);
-  var body = doc.getBody();
-  var texto = body.getText();
-  var exito = sustitute(arrayCites, arrayCitesId, body, outobj, doc);
   
   return exito;
 }
@@ -2542,6 +2504,7 @@ BibTex.prototype = {
     },
   'checkRequieredFields' : function(entry, ret)
    {
+     
      var exito = true;
      if (array_key_exists('title', entry)) {
        //obligar a que exista
@@ -2550,7 +2513,10 @@ BibTex.prototype = {
      else{
        exito = false;
      }
-     if (array_key_exists('publisher', entry)) {
+     if (array_key_exists('publisher', entry) && entry['entryType'] == "book") {
+       ret.publisher = this._unwrap(entry['publisher']);
+     }
+     if (array_key_exists('journal', entry) && entry['entryType'] == "article") {
        ret.publisher = this._unwrap(entry['publisher']);
      }
      else{
@@ -2563,16 +2529,24 @@ BibTex.prototype = {
        exito = false;
      }
      //Existe alguno de los dos??
-     if (array_key_exists('editor', entry) || array_key_exists('author', entry)) {
-       if (array_key_exists('author', entry)) { //
-         ret.authors = entry['author'];
+     if(entry['entryType'] == "book"){
+       if (array_key_exists('editor', entry) || array_key_exists('author', entry)) {
+         if (array_key_exists('author', entry)) { //
+           ret.authors = entry['author'];
+         }
+         if (array_key_exists('editor', entry)) {
+           ret.editor = this._unwrap(entry['editor']);
+         }
+         
+       }else{
+         exito = false;
        }
-       if (array_key_exists('editor', entry)) {
-         ret.editor = this._unwrap(entry['editor']);
+     } else if(entry['entryType'] == "article"){
+       if (array_key_exists('author', entry)) { 
+           ret.authors = entry['author'];
+       }else{
+         exito = false;
        }
-       
-     }else{
-       exito = false;
      }
      return exito;
     },
@@ -2581,7 +2555,10 @@ BibTex.prototype = {
       var entry = this.data[pos];
       var line    = this.googlestring;
       
-      var ret = {}      
+      var ret = {}   
+      
+      ret.entryType = entry['entryType'];      
+      ret.clave = entry['cite'];
       
       switch(entry['entryType']){
         
@@ -2591,203 +2568,192 @@ BibTex.prototype = {
           //CAMPOS OPCIONALES: resto...
           
           var exito = this.checkRequieredFields(entry, ret);
+          ret.exito = exito;
          
-         /* try {
-             if(!exito){
-               throw ("Error: Faltan campos obligatorios en el .bib, comprueba que estan todos los campos siguientes: author or editor, title, publisher, year");
-             }
-          } catch(e) {
-            alert("Error: Faltan campos obligatorios en el .bib, comprueba que estan todos los campos siguientes: author or editor, title, publisher, year");
-          }*/
-          if (array_key_exists('month', entry)) {
-            
-            var month = this._unwrap(entry['month']);
-            switch(month){
-              case 'jan':
-                month = 'January';
-              break;
-              case 'feb':
-                month = 'February';
-              break;
-              case 'mar':
-                month = 'March';
-              break;
-              case 'apr':
-                month = 'April';
-              break;
-              case 'may':
-                month = 'May';
-              break;
-              case 'jun':
-                month = 'June';
-              break;
-              case 'jul':
-                month = 'July';
-              break;
-              case 'aug':
-                month = 'August';
-              break;
-              case 'sep':
-                month = 'September';
-              break;
-              case 'oct':
-                month = 'October';
-              break;
-              case 'nov':
-                month = 'November';
-              break;
-              case 'dec':
-                month = 'December';
-              break;
-              default:
-                //nothing               
+          if(exito){
+          
+            if (array_key_exists('month', entry)) {           // SI NO HAY EXITO (FALTA ALGUN CAMPO OBLIGATORIO MANDAR FALLO
+              var month = this._unwrap(entry['month']);
+              switch(month){
+                case 'jan':
+                  month = 'January';
+                  break;
+                case 'feb':
+                  month = 'February';
+                  break;
+                case 'mar':
+                  month = 'March';
+                  break;
+                case 'apr':
+                  month = 'April';
+                  break;
+                case 'may':
+                  month = 'May';
+                  break;
+                case 'jun':
+                  month = 'June';
+                  break;
+                case 'jul':
+                  month = 'July';
+                  break;
+                case 'aug':
+                  month = 'August';
+                  break;
+                case 'sep':
+                  month = 'September';
+                  break;
+                case 'oct':
+                  month = 'October';
+                  break;
+                case 'nov':
+                  month = 'November';
+                  break;
+                case 'dec':
+                  month = 'December';
+                  break;
+                default:
+                  //nothing               
+              }
+              ret.month = month;
+            }            
+            if (array_key_exists('series', entry)) {
+              ret.series = this._unwrap(entry['series']);
             }
-            ret.month = month;
+            if (array_key_exists('volume', entry)) {
+              ret.volume = this._unwrap(entry['volume']);
+            }
+            if (array_key_exists('isbn', entry)) {
+              ret.isbn = this._unwrap(entry['isbn']);
+            }
+            if (array_key_exists('issn', entry)) {
+              ret.issn = this._unwrap(entry['issn']);
+            }
+            if (array_key_exists('pages', entry)) {
+              ret.pages = this._unwrap(entry['pages']);
+            }
+            if (array_key_exists('address', entry)) {
+              ret.address = this._unwrap(entry['address']);
+            }
+            if (array_key_exists('note', entry)) {
+              ret.note = this._unwrap(entry['note']);
+            }            
+            if (array_key_exists('date_added', entry)) {
+              ret.date_added = this._unwrap(entry['date_added']);
+            }
+            if (array_key_exists('date_modified', entry)) {
+              ret.date_modified = this._unwrap(entry['date_modified']);
+            }
+            if (array_key_exists('crossrefonly', entry)) {
+              ret.crossrefonly = this._unwrap(entry['crossrefonly']);
+            }
+            if (array_key_exists('booktitle', entry)) {
+              ret.booktitle = this._unwrap(entry['booktitle']);
+            }
+            if (array_key_exists('number', entry)) {
+              ret.number = this._unwrap(entry['number']);
+            }
+            if (array_key_exists('key', entry)) {
+              key = this._unwrap(entry['key']);
+            }
+            if (array_key_exists('annote', entry)) {
+              ret.annote = this._unwrap(entry['annote']);
+            }
+            
           }
-          
-          if (array_key_exists('series', entry)) {
-            ret.series = this._unwrap(entry['series']);
-          }
-          if (array_key_exists('volume', entry)) {
-            ret.volume = this._unwrap(entry['volume']);
-          }
-          if (array_key_exists('isbn', entry)) {
-            ret.isbn = this._unwrap(entry['isbn']);
-          }
-          if (array_key_exists('issn', entry)) {
-            ret.issn = this._unwrap(entry['issn']);
-          }
-          if (array_key_exists('pages', entry)) {
-            ret.pages = this._unwrap(entry['pages']);
-          }
-          if (array_key_exists('address', entry)) {
-            ret.address = this._unwrap(entry['address']);
-          }
-          if (array_key_exists('note', entry)) {
-            ret.note = this._unwrap(entry['note']);
-          }
-          
-          if (array_key_exists('date_added', entry)) {
-            ret.date_added = this._unwrap(entry['date_added']);
-          }
-          if (array_key_exists('date_modified', entry)) {
-            ret.date_modified = this._unwrap(entry['date_modified']);
-          }
-          if (array_key_exists('crossrefonly', entry)) {
-            ret.crossrefonly = this._unwrap(entry['crossrefonly']);
-          }
-          if (array_key_exists('booktitle', entry)) {
-            ret.booktitle = this._unwrap(entry['booktitle']);
-          }
-          if (array_key_exists('number', entry)) {
-            ret.number = this._unwrap(entry['number']);
-          }
-          if (array_key_exists('key', entry)) {
-            key = this._unwrap(entry['key']);
-          }
-          if (array_key_exists('annote', entry)) {
-            ret.annote = this._unwrap(entry['annote']);
-          }
-          
           return ret;                 
         break;
-        case "article":                                
-          if (array_key_exists('numpages', entry)) {
-            ret.numpages = this._unwrap(entry['numpages']);
-          }
-          if (array_key_exists('issue_date', entry)) {
-            ret.issue_date = this._unwrap(entry['issue_date']);
-          }
-          if (array_key_exists('url', entry)) {
-            ret.url = this._unwrap(entry['url']);
-          }
-          if (array_key_exists('doi', entry)) {
-            ret.doi = this._unwrap(entry['doi']);
-          }
-          if (array_key_exists('acmid', entry)) {
-            ret.acmid = this._unwrap(entry['acmid']);
-          }
-          if (array_key_exists('title', entry)) {
-            ret.title = this._unwrap(entry['title']);
-          }
-          if (array_key_exists('publisher', entry)) {
-            ret.publisher = this._unwrap(entry['publisher']);
-          }
-          if (array_key_exists('month', entry)) {
-            var month = this._unwrap(entry['month']);
-            switch(month){
-              case 'jan':
-                month = 'January';
-              break;
-              case 'feb':
-                month = 'February';
-              break;
-              case 'mar':
-                month = 'March';
-              break;
-              case 'apr':
-                month = 'April';
-              break;
-              case 'may':
-                month = 'May';
-              break;
-              case 'jun':
-                month = 'June';
-              break;
-              case 'jul':
-                month = 'July';
-              break;
-              case 'aug':
-                month = 'August';
-              break;
-              case 'sep':
-                month = 'September';
-              break;
-              case 'oct':
-                month = 'October';
-              break;
-              case 'nov':
-                month = 'November';
-              break;
-              case 'dec':
-                month = 'December';
-              break;
-              default:
-                //nothing               
-            }
-            ret.month = month;
-          }
-          if (array_key_exists('year', entry)) {
-            ret.year = this._unwrap(entry['year']);
-          }
-          if (array_key_exists('author', entry)) {
-            ret.authors = entry['author'];
-          }
-          if (array_key_exists('journal', entry)) {
-            ret.journal = this._unwrap(entry['journal']);
-          }
-          if (array_key_exists('volume', entry)) {
-            ret.volume = this._unwrap(entry['volume']);
-          }
-          if (array_key_exists('issn', entry)) {
-            ret.issn = this._unwrap(entry['issn']);
-          }
-          if (array_key_exists('pages', entry)) {
-            ret.pages = this._unwrap(entry['pages']);
-          }
-          if (array_key_exists('address', entry)) {
-            ret.address = this._unwrap(entry['address']);
-          }
-          if (array_key_exists('number', entry)) {
-            ret.number = this._unwrap(entry['number']);
-          }
-          if (array_key_exists('keywords', entry)) {
-            ret.keywords = this._unwrap(entry['keywords']);
-          }
-          if (array_key_exists('articleno', entry)) {
-            ret.articleno = this._unwrap(entry['articleno']);
-          }
+        case "article":     
           
+          var exito = this.checkRequieredFields(entry, ret);
+          ret.exito = exito;          
+          
+          if(exito){
+          
+            if (array_key_exists('numpages', entry)) {
+              ret.numpages = this._unwrap(entry['numpages']);
+            }
+            if (array_key_exists('issue_date', entry)) {
+              ret.issue_date = this._unwrap(entry['issue_date']);
+            }
+            if (array_key_exists('url', entry)) {
+              ret.url = this._unwrap(entry['url']);
+            }
+            if (array_key_exists('doi', entry)) {
+              ret.doi = this._unwrap(entry['doi']);
+            }
+            if (array_key_exists('acmid', entry)) {
+              ret.acmid = this._unwrap(entry['acmid']);
+            }
+            if (array_key_exists('publisher', entry)) {
+              ret.publisher = this._unwrap(entry['publisher']);
+            }
+            if (array_key_exists('month', entry)) {
+              var month = this._unwrap(entry['month']);
+              switch(month){
+                case 'jan':
+                  month = 'January';
+                  break;
+                case 'feb':
+                  month = 'February';
+                  break;
+                case 'mar':
+                  month = 'March';
+                  break;
+                case 'apr':
+                  month = 'April';
+                  break;
+                case 'may':
+                  month = 'May';
+                  break;
+                case 'jun':
+                  month = 'June';
+                  break;
+                case 'jul':
+                  month = 'July';
+                  break;
+                case 'aug':
+                  month = 'August';
+                  break;
+                case 'sep':
+                  month = 'September';
+                  break;
+                case 'oct':
+                  month = 'October';
+                  break;
+                case 'nov':
+                  month = 'November';
+                  break;
+                case 'dec':
+                  month = 'December';
+                  break;
+                default:
+                  //nothing               
+              }
+              ret.month = month;
+            }
+            if (array_key_exists('volume', entry)) {
+              ret.volume = this._unwrap(entry['volume']);
+            }
+            if (array_key_exists('issn', entry)) {
+              ret.issn = this._unwrap(entry['issn']);
+            }
+            if (array_key_exists('pages', entry)) {
+              ret.pages = this._unwrap(entry['pages']);
+            }
+            if (array_key_exists('address', entry)) {
+              ret.address = this._unwrap(entry['address']);
+            }
+            if (array_key_exists('number', entry)) {
+              ret.number = this._unwrap(entry['number']);
+            }
+            if (array_key_exists('keywords', entry)) {
+              ret.keywords = this._unwrap(entry['keywords']);
+            }
+            if (array_key_exists('articleno', entry)) {
+              ret.articleno = this._unwrap(entry['articleno']);
+            }
+            
+          }
           return ret;
         break;
         case "inproceedings":
