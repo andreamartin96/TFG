@@ -237,13 +237,20 @@ function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){ //remplaz
   var bibtexDoc = [];
   var lo = arrayCitesId.length;
   var exito = true;
-  for(var i = 0; i < arrayCitesId.length; i++){
-    var idBibtex = arrayCitesId[i];
-    bibtexDoc[i] = JSON.stringify(bibtex_dict[idBibtex]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
+  var i = 0;
+  while( i < arrayCitesId.length){  //para cada clave encuentro su informacion correspondiente del .bib
+    var clave = arrayCitesId[i]; 
+    var prueba = bibtex_dict[clave];
+    if(bibtex_dict[clave] !== undefined){ //si es undefined es que la clave no existe en el archivo .bib
+      bibtexDoc[i] = JSON.stringify(bibtex_dict[clave]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
+      i++;
+    }else{
+      exito = false; //existe una clave en el documento que no esta definida en el .bib
+    }
   }
   
-   for(var j = 0; j < arrayCitesId.length; j++){  
-     var regex = /\/cite\{/  
+  for(var j = 0; j < bibtexDoc.length; j++){  
+    var regex = /\/cite\{/  
     var r2 = /\/cite/g;
     var r3 = /\{/;                                         //POSIBLE SOLUCION!! SIGO PROBANDO A VER SI CONSIGO BORRAR LA \
     var r5 = /\}/;
@@ -255,7 +262,8 @@ function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){ //remplaz
     if(body2.editAsText().replaceText(toSearch,replacement) === null){
       exito = false;
     }
-   }
+  }
+  
    
    /*
   
