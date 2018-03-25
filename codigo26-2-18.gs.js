@@ -53,69 +53,67 @@ function showSidebar() {
 * @NotOnlyCurrentDoc
 */
 
-/*function openDoc(e) {
-  var data = {};
-  e = "1Vw9vjUobLNFevt6YLE62oEpcfAIYGQSJ";
-  var idn = e;
-  e = e == "root" ? DriveApp.getRootFolder().getId() : e;
-  data[e] = {};
-  data[e].keyname = DriveApp.getFolderById(e).getName();
-  var url = DriveApp.getFolderById(e).getUrl();
-  //var url = "https://docs.google.com/document/d/"+ e + "/edit";
-  //var doc = DocumentApp.openByUrl(url);
-  //var doc = DocumentApp.openById(e);
-  //var body = doc.getBody().getText();
-  var response = UrlFetchApp.fetch(url);
-  var aux = response.getContentText();
-  var dataAll = JSON.parse(response.getContentText()); 
-  return aux;
 
-}*/
-
-function getCites(){
+function getCites(){ //Obtiene todos los \cite encontrados en el documento actual
   var body = DocumentApp.getActiveDocument().getBody();
   var text = body.getText();
   
-  var r1 = /\\/g;
-  var r2 = /cite/;
-  var r3 = /\{/;
-  var r4 = /\w{1,15}/;
-  var r5 = /\}/;
+  /*NUEVA EXPRESION REGULAR HECHA. POSIBLE COMBINACIONES DE CLAVES QUE IDENTIFICA:
   
-  /* var r1 = /\\/g;
-  var r4 = /\{/;
-  var r5 = /\w/;
-  var r6 = /\}/;*/
+  \cite{hola:16}
+  \cite{hola}
+  \cite{Caballero2015104}
+  \cite{pedersen2012error}
+  \cite{Agha:1986:AMC}
+  \cite{ho-la}
+  \cite{h_ola}
+  \cite{Agha:al1986}
+  \cite{Aer1986:AMC}
   
-  var r6 = new RegExp(r1.source + r2.source + r3.source + r4.source + r5.source, (r1.global ? 'g' : '') + (r1.ignoreCase ? 'i' : '') + (r1.multiline ? 'm' : ''));
+  
+  EXPLICACION DE LA REGEX: 
+  
+  - \w{1, 40}   ---->  identifica una palabra de 1 a 40 letras
+  - \d{1, 40}   ---->  identifica una palabra de 1 a 40 digitos
+  -  ( | )    ---->  OR logica
+  -  \\    ---->  caracter especial \
+  
+  */
+  
+  var r = /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/gmi;
+  var regex = new RegExp(r);
+  
   var solutionArray = [];
       
-  solutionArray = text.match(r6);
+  solutionArray = text.match(regex);
   
   
   if(solutionArray){
     
   }else{
-    cad = "Error during the proccess!! Could be a problem in your active document. Check it";
+    cad = "Error";
     solutionArray[0] = cad;
   }
+  
+  
   return solutionArray;
 }
 
-function getId(solutionArray){
+function getId(solutionArray){  //obtiene todas las claves de los \cites encontrados en el documento actual
+  var newArray = new Array();
   for(var i = 0; i < solutionArray.length; i++){
       
       var strL = solutionArray[i].length;
-      solutionArray[i] = solutionArray[i].slice(6, strL - 1);
+      newArray[i] = solutionArray[i].slice(6, strL - 1);
       
     }
-  return solutionArray;
+  return newArray;
 }
 
-function getText(){
+function getText(){  //transforma todas las citas en una cadena
   var i = 0;
   var auxArray = [];
-  var cad = ""; // cad coteins all \cite. It is used to test!!!!!!
+  var cad = ""; // cad contiene todos los \cite (usado para testear)
   var length  = 0;
   length = solutionArray.length;
   
@@ -129,119 +127,229 @@ function getText(){
   return cad;
 }
 
-function sustitute(arrayCites, arrayCitesId, body, bibtex_dict){
+/*
+
+function prueba3(){
+  var doc = DocumentApp.getActiveDocument();
+  var body = DocumentApp.getActiveDocument().getBody();
   
+  // Append a section header paragraph.
+  var section = body.appendParagraph("Section 1");
+  section.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  
+  // Append a regular paragraph.
+  body.appendParagraph("This is a typical paragraph.");
+  
+  doc.saveAndClose();
+  
+}
+
+function prueba2(){
+  var doc = DocumentApp.getActiveDocument();
+  var body = doc.getBody();
+  
+  //var r = /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/gmi;
+
+  var j = 0;
+  var replacement = "[" + j.toString() + "]";
+  //var toSearch = new RegExp(r2.source + r3.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
+  //var toSearch = "\cite{" + cite + "}";
+  body.editAsText().replaceText(r,replacement);
+  doc.saveAndClose();
+  var prueba = 0;
+}
+
+
+function prueba1(){
+  
+  var d = DocumentApp.getActiveDocument()
+  var b = d.getBody();
+  var cites = getCites();
+  var ids = getId(cites);
+  var j = 0;
+  //for(var j = 0; j < ids.length; j++){  
+    var clave = ids[j];
+    clave = "\\cite{" + clave + "}";
+    var replacement = "[" + j.toString() + "]";
+    var claveToRegex = new RegExp(clave);
+    claveToRegex = /\\cite{hola}/;
+    claveToRegex = new RegExp(claveToRegex);
+    b.editAsText().replaceText(claveToRegex,replacement);
+  //}
+  d.saveAndClose();
+  var texto = 0;
+}
+
+function prueba(){
+   
+  var placeHolder = "bibliography";
+  
+  var d = DocumentApp.getActiveDocument()
+  var s = d.getBody();
+  var result = s.findText(placeHolder); 
+  var placeholderStart = result.getStartOffset(); 
+  var par = s.getChild(0).asParagraph();
+  var parcopy = par.copy();
+  var parLen = par.editAsText().getText().length-1;
+  Logger.log('placeholderStart = '+placeholderStart+'  parLen = '+parLen)
+  par.editAsText().deleteText(placeholderStart, parLen);
+  parcopy.editAsText().deleteText(0, placeholderStart+placeHolder.length);
+  var section = s.getChild(0).appendParagraph("Section 1");
+  
+  section.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  
+  // Append a regular paragraph.
+  var paragraph = s.getChild(1).appendParagraph("This is a typical paragraph.");  
+  //s.appendParagraph(parcopy);
+  parcopy.merge(); 
+  d.saveAndClose();
+  
+   var prueba = "";
+}
+
+*/
+
+//VERSION ANTIGUAde la funcion sustitute
+
+/*function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
   var bibtexDoc = [];
-  
+  var lo = arrayCitesId.length;
+  var exito = false;
   for(var i = 0; i < arrayCitesId.length; i++){
     var idBibtex = arrayCitesId[i];
     bibtexDoc[i] = JSON.stringify(bibtex_dict[idBibtex]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
   }
   
-  for(var i = 0; i < arrayCitesId.length; i++){
-    var cite = arrayCites[i];
-    body.editAsText().replaceText(cite, bibtexDoc[i]);  //no funciona MIRAR EXPRESIONES REGULARES DE GOOGLE APPS SCRIPT
+  for(var j = 0; j < arrayCitesId.length; j++){  
+    var cite = arrayCitesId[j];
+    var replacement = "[" + j.toString() + "]";
+    var toSearch = "\cite{" + cite + "}";
+    body2.editAsText().replaceText(toSearch,replacement);
+
+  }
+  doc.saveAndClose();
+  exito = true;
+  return exito;
+}*/
+
+
+function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){ //remplaza todos los \cite{id} 
+  var bibtexDoc = [];
+  var lo = arrayCitesId.length;
+  var exito = true;
+  var i = 0;
+  while( i < arrayCitesId.length){  //para cada clave encuentro su informacion correspondiente del .bib
+    var clave = arrayCitesId[i]; 
+    var prueba = bibtex_dict[clave];
+    if(bibtex_dict[clave] !== undefined){ //si es undefined es que la clave no existe en el archivo .bib
+      bibtexDoc[i] = JSON.stringify(bibtex_dict[clave]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
+      i++;
+    }else{
+      exito = false; //existe una clave en el documento que no esta definida en el .bib
+    }
   }
   
+  for(var j = 0; j < bibtexDoc.length; j++){  
+    var regex = /\/cite\{/  
+    var r2 = /\/cite/g;
+    var r3 = /\{/;                                         //POSIBLE SOLUCION!! SIGO PROBANDO A VER SI CONSIGO BORRAR LA \
+    var r5 = /\}/;
+    var cite = arrayCitesId[j];
+    cite = "/" + cite + "/";
+    var replacement = "[" + j.toString() + "]";
+    var toSearch = new RegExp(regex.source + cite + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
+    //var toSearch = "cite{" + cite + "}";
+    if(body2.editAsText().replaceText(toSearch,replacement) === null){
+      exito = false;
+    }
+  }
   
+   
+   /*
+  
+  for(var j = 0; j < arrayCitesId.length; j++){  
+    var cite = arrayCitesId[j];
+    var replacement = "[" + j.toString() + "]";
+    var toSearch = "cite{" + cite + "}";
+    if(body2.editAsText().replaceText(toSearch,replacement) === null){
+      exito = false;
+    }
+
+  }
+   
+  */
+  
+ /*body2.appendHorizontalRule();
+  for(var i = 0; i < arrayCitesId.length; i++){  
+    var cite = arrayCitesId[i];
+    var text = "[" + i.toString() + "]      ----     " + bibtex_dict[cite]["title"] + " | " + bibtex_dict[cite]["authors"] + " | " + bibtex_dict[cite]["year"];
+    body2.appendParagraph(text);
+
+  }*/
+  doc.saveAndClose();
+  return exito;
 }
+
+//COMPRUEBA SI EN TODOS LOS DOCUMENTOS ENCONTRADOS HUBO EXITO EN SU CREACIÓN (NO FALTA NINGÚN CAMPO OBLIGATORIO)
+
+function checkErrors(bibtex){
+  var i = 0;
+  var errorEncontrado = false;
+  while(i<bibtex.data.length && !errorEncontrado){
+    var outobj = bibtex.google(i);
+    if(outobj['exito'] === false){
+      errorEncontrado = true;
+    }
+    
+    i++;
+  } 
+  return errorEncontrado;
+}
+
+//FUNCION PRINCIPAL QUE QUE ES LLAMA TRAS PULSAR EL BOTON DE "combinar documentos"
 
 function getBibtexAndDoc(e){
   //init the return vars
   
-  e = "197Gdg6M-2gTpOoxGQvaxkf5tjzAma8zI";
+  e = "1nvTRkIZ0dbHamwv_H9ovn_uPdveB6CRo"; //utilizado para el proceso de testing
   var bibtex_dict = [];
-  var body;//inits to undefinded
-  
-  //-------------  
-  /* var bibtex_file_ids, doc_file_ids;
-  bibtex_file_ids = ScriptProperties.getProperty("bibtex_file_ids");
-  if (bibtex_file_ids == null) bibtex_file_ids = {};
-  else bibtex_file_ids = JSON.parse(bibtex_file_ids);
-  doc_file_ids = ScriptProperties.getProperty("doc_file_ids");
-  if (doc_file_ids == null) doc_file_ids = {};
-  else doc_file_ids = JSON.parse(doc_file_ids); */
-  //-------------  
-  //go through doc list to find all documents ending with .bib
-  //TODO only iterate through "Documents"
-  /*var doclist = DriveApp.getAllFiles();
-  var bibtex_doc;
-  var found = false;
-  for(var i=0; i<doclist.length; ++i){
-    var dfile = doclist[i];
-    if (dfile.getId() in bibtex_file_ids){
-    //if (dfile.getName().substring(dfile.getName().length-4,dfile.getName().length)=='.bib'){
-      found = true;
-      bibtex_doc = dfile;
-      break;
-    }
-  } */
-  
+
   var bibtex_doc = DriveApp.getFileById(e);
   
   
-  //-------------  
-  //use BibTex javascript at the bottom of this script
+  //usa la nueva clase "BibTex" que se encuentra al final del script
   var bibtex = new BibTex();
-  bibtex.content = bibtex_doc.getBlob().getDataAsString(); // the bibtex content as a string
+  bibtex.content = bibtex_doc.getBlob().getDataAsString(); //El contenido de bibtex como un string
   bibtex.parse();
-  //-------------  
-  //create lookup dict for citations with {'citekey':'citation string: authors, title, ...'}
-  for(var i=0; i<bibtex.data.length; ++i){
-    var outobj = bibtex.google(i);
-    bibtex_dict[bibtex.data[i].cite] = outobj;
-  }
-  //-------------  
-  //loop through all documents to find document with title Citation Test, this is just the dev test document
- 
   
-  //var docid;
-  /*for(var i=0; i<doclist.length; ++i){
-    var dfile = doclist[i];
-    if (dfile.getId() in doc_file_ids){
-    //if (dfile.getName() == 'Citation Test'){
-      docid = dfile.getId();
-      break;
+  
+  var errorEncontrado = checkErrors(bibtex); // comprueba si hubo exito en todos los documentos encontrados
+  var exito = false;
+  if(!errorEncontrado){
+    
+    //Crea un diccionario con todos los documentos
+    for(var i=0; i<bibtex.data.length; ++i){
+      var outobj = bibtex.google(i);
+      bibtex_dict[bibtex.data[i].cite] = outobj;
     }
-  }
-  if (docid!=undefined) { 
-    var doc = DocumentApp.openById(docid);
-    body = doc.getActiveSection();
-  }*/
-  
-  var arrayCites = getCites();
-  var arrayCitesId = getId(arrayCites);
-  /*var arrayCites = [];
-  arrayCites[0] = "\cite{Nobody06}";
-  
-  var arrayCitesId = [];
-  arrayCitesId[0] = "Nobody06";*/
-  
-  //var textCites = getText();  // transforma el array en un texto
-  
-  var idDoc = DocumentApp.getActiveDocument().getId(); //id del documento abierto
-  
-  var file = DriveApp.getFileById(idDoc); //archivo que representa el doc abierto
-  var newIdDoc = file.makeCopy("New Document").getId(); //copia del documento, renombrandolo y obteniendo su id
-  //var newFile = DriveApp.getFileById(newIdDoc);
-  var doc = DocumentApp.openById(newIdDoc);
-  var body2 = doc.getBody();
-  
-  var exito = sustitute(arrayCites, arrayCitesId, body, bibtex_dict);
-  
-  /*var bibtexDoc = [];
-  var lo = arrayCitesId.length;
-  for(var i = 0; i < arrayCitesId.length; i++){
-    var idBibtex = arrayCitesId[i];
-    bibtexDoc[i] = JSON.stringify(bibtex_dict[idBibtex]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
+    
+    var arrayCites = getCites();
+    var arrayCitesId = getId(arrayCites);
+    
+    
+    //var textCites = getText();  // transforma el array en un texto
+    
+    var idDoc = DocumentApp.getActiveDocument().getId(); //id del documento abierto
+    
+    var file = DriveApp.getFileById(idDoc); //archivo que representa el doc abierto
+    var newIdDoc = file.makeCopy("New Document").getId(); //copia del documento, renombrandolo y obteniendo su id
+    //var newFile = DriveApp.getFileById(newIdDoc);
+    var doc = DocumentApp.openById(newIdDoc);
+    var body = doc.getBody();
+    var texto = body.getText();
+    exito = sustitute(arrayCites, arrayCitesId, body, bibtex_dict, doc);
   }
   
-  for(var j = 0; j < arrayCitesId.length; j++){
-    var cite = arrayCites[j];
-    body2.editAsText().replaceText(cite, " Hola");  //no funciona
-  }
-  
-  return; */
   return exito;
 }
 
@@ -275,15 +383,6 @@ function doSomething(id) {
   return res;
 }
 
-
-
-
-function getBibDocument(id){
-  var file = DriveApp.getFileById(id);
-  var contentFile = file.getContent();
- 
-  return contentFile;
-}
 
 /**
  * Gets the text the user has selected. If there is no selection,
@@ -479,6 +578,7 @@ function translateText(text, origin, dest) {
   }
   return LanguageApp.translate(text, origin, dest);
 }
+
 
 //========================================================
 
@@ -1191,6 +1291,8 @@ function print_r( array, return_val ) {
         return output;
     }
 }// }}}
+
+
 // {{{ is_array
 function is_array( mixed_var ) {
     // Finds whether a variable is an array
@@ -1822,8 +1924,8 @@ BibTex.prototype = {
      * @param string entry The entry with the authors
      * @return array the extracted authors
      */
-    '_extractAuthors': function(entry) {
-        entry       = this._unwrap(entry);
+  '_extractAuthors': function(entry) {  // FUNCIONA MAL PARA AQUELLOS CASOS EN EL QUE LA PARTE FIRST LA PRIMERA LETRA  
+        entry       = this._unwrap(entry);  // TIENE UNA TILDE -> EJEMPLO: Íñigo
         var authorarray = array();
         authorarray = split(' and ', entry);
         for (var i = 0; i < sizeof(authorarray); i++) {
@@ -1834,10 +1936,53 @@ BibTex.prototype = {
             var von      = '';
             var last     = '';
             var jr       = '';
+            
+          //comprobar si existen posible acentos              
+          if (author.indexOf("{\'a}") >= 0){
+            author = author.replace("{\\'a}", "á");
+          }else if (author.indexOf("\'{a}") >= 0){
+            author = author.replace("\\'{a}", "á");
+          }else if (author.indexOf("\'a") >= 0){
+            author = author.replace("\\'a", "á");
+          }
+          
+          if (author.indexOf("{\'e}") >= 0){
+            author = author.replace("{\\'e}", "é");
+          }else if (author.indexOf("\'{e}") >= 0){
+            author = author.replace("\\'{e}", "é");
+          }else if (author.indexOf("\'e") >= 0){
+            author = author.replace("\\'e", "é");
+          } 
+          
+          if (author.indexOf("{\'i}") >= 0){
+            author = author.replace("{\\'i}", "í");
+          }else if (author.indexOf("\'{i}") >= 0){
+            author = author.replace("\\'{i}", "í");
+          }else if (author.indexOf("\'i") >= 0){
+            author = author.replace("\\'i", "í");
+          } 
+          
+          if (author.indexOf("{\'o}") >= 0){
+            author = author.replace("{\\'o}", "ó");
+          }else if (author.indexOf("\'{o}") >= 0){
+            author = author.replace("\\'{o}", "ó");
+          }else if (author.indexOf("\'o") >= 0){
+            author = author.replace("\\'o", "ó");
+          } 
+          
+          if (author.indexOf("{\'u}") >= 0){
+            author = author.replace("{\\'u}", "ú");
+          }else if (author.indexOf("\'{u}") >= 0){
+            author = author.replace("\\'{u}", "ú");
+          }else if (author.indexOf("\'u") >= 0){
+            author = author.replace("\\'u", "ú");
+          } 
+              
+          
             if (strpos(author, ',') === false) {
                 var tmparray = array();
                 //tmparray = explode(' ', author);
-                tmparray = split(' |~', author);
+                tmparray = split(' ', author);
                 var size     = sizeof(tmparray);
                 if (1 == size) { //There is only a last
                     last = tmparray[0];
@@ -1856,7 +2001,7 @@ BibTex.prototype = {
                                 // IGNORE?
                             } else if ((0 == casev) || (-1 == casev)) { //Change from von to last
                                 //You only change when there is no more lower case there
-                                islast = true;
+                                 var islast = true;
                                 for (var k=(j+1); k<(size-1); k++) {
                                     futurecase = this._determineCase(tmparray[k]);
                                     if (this.isError(casev)) {
@@ -1894,6 +2039,8 @@ BibTex.prototype = {
                     last += ' '+tmparray[size-1];
                 }
             } else { //Version 2 and 3
+              
+                             
                 var tmparray     = array();
                 tmparray     = explode(',', author);
                 //The first entry must contain von and last
@@ -1981,7 +2128,10 @@ BibTex.prototype = {
                 } else if ( (ordv>=97) && (ordv<=122) && (0==openbrace) ) { //The first character is lowercase
                     ret   = 0;
                     found = true;
-                } else { //Not yet found
+                } else if(((ordv==193) || (ordv==201) || (ordv==205) || (ordv==211) || (ordv==218)) && (0==openbrace)){
+                    ret   = 1;
+                    found = true;
+                }else{ //Not yet found
                     i++;
                 }
             }
@@ -2153,7 +2303,7 @@ BibTex.prototype = {
         } else {
             array['first'] = trim(array['first']);
         }
-        ret = this.authorstring;
+        var ret = this.authorstring;
         ret = str_replace("VON", array['von'], ret);
         ret = str_replace("LAST", array['last'], ret);
         ret = str_replace("JR", array['jr'], ret);
@@ -2363,15 +2513,273 @@ BibTex.prototype = {
         ret += "</p>\n";
         return ret;
     },
+  'checkRequieredFields' : function(entry, ret)
+   {
+     
+     var exito = true;
+     if (array_key_exists('title', entry)) {
+       //obligar a que exista
+       ret.title = this._unwrap(entry['title']);
+     }
+     else{
+       exito = false;
+     }
+     if (array_key_exists('publisher', entry) && entry['entryType'] == "book") {
+       ret.publisher = this._unwrap(entry['publisher']);
+     }
+     if (array_key_exists('journal', entry) && entry['entryType'] == "article") {
+       ret.publisher = this._unwrap(entry['publisher']);
+     }
+     else{
+       exito = false;
+     }
+     if (array_key_exists('year', entry)) {
+       ret.year = this._unwrap(entry['year']);
+     }
+     else{
+       exito = false;
+     }
+     //Existe alguno de los dos??
+     if(entry['entryType'] == "book"){
+       if (array_key_exists('editor', entry) || array_key_exists('author', entry)) {
+         if (array_key_exists('author', entry)) { //
+           ret.authors = entry['author'];
+         }
+         if (array_key_exists('editor', entry)) {
+           ret.editor = this._unwrap(entry['editor']);
+         }
+         
+       }else{
+         exito = false;
+       }
+     } else if(entry['entryType'] == "article"){
+       if (array_key_exists('author', entry)) { 
+           ret.authors = entry['author'];
+       }else{
+         exito = false;
+       }
+     }
+     return exito;
+    },
   'google': function(pos)
     {
       var entry = this.data[pos];
       var line    = this.googlestring;
-      var title   = '';
-      var journal = '';
-      var year    = '';
-      var authors = '';
-      if (array_key_exists('title', entry)) {
+      
+      var ret = {}   
+      
+      ret.entryType = entry['entryType'];      
+      ret.clave = entry['cite'];
+      
+      switch(entry['entryType']){
+        
+        case "book":
+          
+          //CAMPOS OBLIGATORIOS: author or editor, title, publisher, year
+          //CAMPOS OPCIONALES: resto...
+          
+          var exito = this.checkRequieredFields(entry, ret);
+          ret.exito = exito;
+         
+          if(exito){
+          
+            if (array_key_exists('month', entry)) {           // SI NO HAY EXITO (FALTA ALGUN CAMPO OBLIGATORIO MANDAR FALLO
+              var month = this._unwrap(entry['month']);
+              switch(month){
+                case 'jan':
+                  month = 'January';
+                  break;
+                case 'feb':
+                  month = 'February';
+                  break;
+                case 'mar':
+                  month = 'March';
+                  break;
+                case 'apr':
+                  month = 'April';
+                  break;
+                case 'may':
+                  month = 'May';
+                  break;
+                case 'jun':
+                  month = 'June';
+                  break;
+                case 'jul':
+                  month = 'July';
+                  break;
+                case 'aug':
+                  month = 'August';
+                  break;
+                case 'sep':
+                  month = 'September';
+                  break;
+                case 'oct':
+                  month = 'October';
+                  break;
+                case 'nov':
+                  month = 'November';
+                  break;
+                case 'dec':
+                  month = 'December';
+                  break;
+                default:
+                  //nothing               
+              }
+              ret.month = month;
+            }            
+            if (array_key_exists('series', entry)) {
+              ret.series = this._unwrap(entry['series']);
+            }
+            if (array_key_exists('volume', entry)) {
+              ret.volume = this._unwrap(entry['volume']);
+            }
+            if (array_key_exists('isbn', entry)) {
+              ret.isbn = this._unwrap(entry['isbn']);
+            }
+            if (array_key_exists('issn', entry)) {
+              ret.issn = this._unwrap(entry['issn']);
+            }
+            if (array_key_exists('pages', entry)) {
+              ret.pages = this._unwrap(entry['pages']);
+            }
+            if (array_key_exists('address', entry)) {
+              ret.address = this._unwrap(entry['address']);
+            }
+            if (array_key_exists('note', entry)) {
+              ret.note = this._unwrap(entry['note']);
+            }            
+            if (array_key_exists('date_added', entry)) {
+              ret.date_added = this._unwrap(entry['date_added']);
+            }
+            if (array_key_exists('date_modified', entry)) {
+              ret.date_modified = this._unwrap(entry['date_modified']);
+            }
+            if (array_key_exists('crossrefonly', entry)) {
+              ret.crossrefonly = this._unwrap(entry['crossrefonly']);
+            }
+            if (array_key_exists('booktitle', entry)) {
+              ret.booktitle = this._unwrap(entry['booktitle']);
+            }
+            if (array_key_exists('number', entry)) {
+              ret.number = this._unwrap(entry['number']);
+            }
+            if (array_key_exists('key', entry)) {
+              key = this._unwrap(entry['key']);
+            }
+            if (array_key_exists('annote', entry)) {
+              ret.annote = this._unwrap(entry['annote']);
+            }
+            
+          }
+          return ret;                 
+        break;
+        case "article":     
+          
+          var exito = this.checkRequieredFields(entry, ret);
+          ret.exito = exito;          
+          
+          if(exito){
+          
+            if (array_key_exists('numpages', entry)) {
+              ret.numpages = this._unwrap(entry['numpages']);
+            }
+            if (array_key_exists('issue_date', entry)) {
+              ret.issue_date = this._unwrap(entry['issue_date']);
+            }
+            if (array_key_exists('url', entry)) {
+              ret.url = this._unwrap(entry['url']);
+            }
+            if (array_key_exists('doi', entry)) {
+              ret.doi = this._unwrap(entry['doi']);
+            }
+            if (array_key_exists('acmid', entry)) {
+              ret.acmid = this._unwrap(entry['acmid']);
+            }
+            if (array_key_exists('publisher', entry)) {
+              ret.publisher = this._unwrap(entry['publisher']);
+            }
+            if (array_key_exists('month', entry)) {
+              var month = this._unwrap(entry['month']);
+              switch(month){
+                case 'jan':
+                  month = 'January';
+                  break;
+                case 'feb':
+                  month = 'February';
+                  break;
+                case 'mar':
+                  month = 'March';
+                  break;
+                case 'apr':
+                  month = 'April';
+                  break;
+                case 'may':
+                  month = 'May';
+                  break;
+                case 'jun':
+                  month = 'June';
+                  break;
+                case 'jul':
+                  month = 'July';
+                  break;
+                case 'aug':
+                  month = 'August';
+                  break;
+                case 'sep':
+                  month = 'September';
+                  break;
+                case 'oct':
+                  month = 'October';
+                  break;
+                case 'nov':
+                  month = 'November';
+                  break;
+                case 'dec':
+                  month = 'December';
+                  break;
+                default:
+                  //nothing               
+              }
+              ret.month = month;
+            }
+            if (array_key_exists('volume', entry)) {
+              ret.volume = this._unwrap(entry['volume']);
+            }
+            if (array_key_exists('issn', entry)) {
+              ret.issn = this._unwrap(entry['issn']);
+            }
+            if (array_key_exists('pages', entry)) {
+              ret.pages = this._unwrap(entry['pages']);
+            }
+            if (array_key_exists('address', entry)) {
+              ret.address = this._unwrap(entry['address']);
+            }
+            if (array_key_exists('number', entry)) {
+              ret.number = this._unwrap(entry['number']);
+            }
+            if (array_key_exists('keywords', entry)) {
+              ret.keywords = this._unwrap(entry['keywords']);
+            }
+            if (array_key_exists('articleno', entry)) {
+              ret.articleno = this._unwrap(entry['articleno']);
+            }
+            
+          }
+          return ret;
+        break;
+        case "inproceedings":
+        
+        break;
+        case "misc":
+        
+        break;
+        case "mastersthesis":
+        
+        break;
+        default:
+      }
+      
+      /*if (array_key_exists('title', entry)) {
         title = this._unwrap(entry['title']);
       }
       if (array_key_exists('journal', entry)) {
@@ -2392,7 +2800,7 @@ BibTex.prototype = {
           authors = entry['author'];
         }
       }
-      return {title: title, journal: journal, year: year, authors: authors}
+      return {title: title, journal: journal, year: year, authors: authors}*/
       /*
       if ((''!=title) || (''!=journal) || (''!=year) || (''!=authors)) {
         return {title: title, journal: journal, year: year, authors: authors}
@@ -2404,3 +2812,17 @@ BibTex.prototype = {
       */
     }
 };
+
+/*
+
+REFERENCIAS:
+
+FORMATO PARA EL CAMPO AUTHOR: https://www.tug.org/TUGboat/tb27-2/tb87hufflen.pdf
+
+INFORMACION DE LOS CAMPOS DE UN .bib: https://es.wikipedia.org/wiki/BibTeX
+
+PÁGINA ONLINE PARA PROBAR EXPRESIONES REGULARES: https://regex101.com/r/vNZNnz/4
+
+DOCUMENTACIÓN SOBRE BIBTEX: ftp://ftp.ctan.org/tex-archive/info/spanish/guia-bibtex/guia-bibtex.pdf
+
+*/
