@@ -127,7 +127,18 @@ function getText(){  //transforma todas las citas en una cadena
   return cad;
 }
 
-/*
+function prueba4(){
+  var doc = DocumentApp.getActiveDocument();
+  var bodyElement = DocumentApp.getActiveDocument().getBody();
+  var searchResult = bodyElement.findText("bibliography");
+
+  if (searchResult !== null) {
+    var thisElement = searchResult.getElement();
+    var thisElementText = thisElement.asText();
+    var matchString = thisElementText.getText().substring(searchResult.getStartOffset(), searchResult.getEndOffsetInclusive()+1);
+  }
+  return 0;
+}
 
 function prueba3(){
   var doc = DocumentApp.getActiveDocument();
@@ -158,28 +169,6 @@ function prueba2(){
   doc.saveAndClose();
   var prueba = 0;
 }
-
-
-function prueba1(){
-  
-  var d = DocumentApp.getActiveDocument()
-  var b = d.getBody();
-  var cites = getCites();
-  var ids = getId(cites);
-  var j = 0;
-  //for(var j = 0; j < ids.length; j++){  
-    var clave = ids[j];
-    clave = "\\cite{" + clave + "}";
-    var replacement = "[" + j.toString() + "]";
-    var claveToRegex = new RegExp(clave);
-    claveToRegex = /\\cite{hola}/;
-    claveToRegex = new RegExp(claveToRegex);
-    b.editAsText().replaceText(claveToRegex,replacement);
-  //}
-  d.saveAndClose();
-  var texto = 0;
-}
-
 function prueba(){
    
   var placeHolder = "bibliography";
@@ -207,7 +196,6 @@ function prueba(){
    var prueba = "";
 }
 
-*/
 
 //VERSION ANTIGUAde la funcion sustitute
 
@@ -305,6 +293,38 @@ function checkErrors(bibtex){
   } 
   return errorEncontrado;
 }
+
+
+// INSERTA UN PÁRRAFO EN EL LUGAR DONDE SE ENCUENTRA \bibliography
+
+//PD: si \bibliography esta en medio de un párrafo de texto elimina dicho párrafo entero!!!
+
+function setBiblio(){
+  
+  var d = DocumentApp.getActiveDocument();
+  var b = d.getBody();
+  
+  var rangeElem = b.findText("bibliography");
+  var elem = rangeElem.getElement();
+  var parent = elem.getParent();
+  var index = parent.getParent().getChildIndex(parent);
+  
+  var numChilds = b.getNumChildren();
+ 
+  var miParagraph = b.insertParagraph(index, "Bibliografía");
+  b.insertParagraph(index + 1, "Esto es la bibliografía...");
+  miParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  
+  //miParagraph.appendHorizontalRule(); añade una linea horizontal --> OPCIONAL
+  
+  elem.removeFromParent();
+
+  d.saveAndClose();
+  return 0;
+}
+
+
+
 
 //FUNCION PRINCIPAL QUE QUE ES LLAMA TRAS PULSAR EL BOTON DE "combinar documentos"
 
@@ -2128,7 +2148,10 @@ BibTex.prototype = {
                 } else if ( (ordv>=97) && (ordv<=122) && (0==openbrace) ) { //The first character is lowercase
                     ret   = 0;
                     found = true;
-                } else { //Not yet found
+                } else if(((ordv==193) || (ordv==201) || (ordv==205) || (ordv==211) || (ordv==218)) && (0==openbrace)){
+                    ret   = 1;
+                    found = true;
+                }else{ //Not yet found
                     i++;
                 }
             }
@@ -2813,6 +2836,10 @@ BibTex.prototype = {
 /*
 
 REFERENCIAS:
+
+Dudas puntuales: StackOverflow
+
+Programación y documentación de las diferentes clases que se pueden usar de Google AppScript: https://developers.google.com/apps-script/reference/document/
 
 FORMATO PARA EL CAMPO AUTHOR: https://www.tug.org/TUGboat/tb27-2/tb87hufflen.pdf
 
