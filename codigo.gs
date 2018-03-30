@@ -308,8 +308,6 @@ function setBiblio(){
   var elem = rangeElem.getElement();
   var parent = elem.getParent();
   var index = parent.getParent().getChildIndex(parent);
-  
-  var numChilds = b.getNumChildren();
  
   var miParagraph = b.insertParagraph(index, "Bibliografía");
   b.insertParagraph(index + 1, "Esto es la bibliografía...");
@@ -320,7 +318,6 @@ function setBiblio(){
   elem.removeFromParent();
 
   d.saveAndClose();
-  return 0;
 }
 
 
