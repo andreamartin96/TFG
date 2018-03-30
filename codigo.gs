@@ -2145,7 +2145,7 @@ BibTex.prototype = {
                 } else if ( (ordv>=97) && (ordv<=122) && (0==openbrace) ) { //The first character is lowercase
                     ret   = 0;
                     found = true;
-                } else if(((ordv==193) || (ordv==201) || (ordv==205) || (ordv==211) || (ordv==218)) && (0==openbrace)){
+                } else if(((ordv==193) || (ordv==201) || (ordv==205) || (ordv==211) || (ordv==218)) && (0==openbrace)){ //si la 1º letra es mayus con tilde
                     ret   = 1;
                     found = true;
                 }else{ //Not yet found
