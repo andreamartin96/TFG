@@ -126,78 +126,85 @@ function getText(){  //transforma todas las citas en una cadena
   
   return cad;
 }
-
-function prueba4(){
-  var doc = DocumentApp.getActiveDocument();
-  var bodyElement = DocumentApp.getActiveDocument().getBody();
-  var searchResult = bodyElement.findText("bibliography");
-
-  if (searchResult !== null) {
-    var thisElement = searchResult.getElement();
-    var thisElementText = thisElement.asText();
-    var matchString = thisElementText.getText().substring(searchResult.getStartOffset(), searchResult.getEndOffsetInclusive()+1);
-  }
-  return 0;
-}
-
-function prueba3(){
-  var doc = DocumentApp.getActiveDocument();
-  var body = DocumentApp.getActiveDocument().getBody();
-  
-  // Append a section header paragraph.
-  var section = body.appendParagraph("Section 1");
-  section.setHeading(DocumentApp.ParagraphHeading.HEADING2);
-  
-  // Append a regular paragraph.
-  body.appendParagraph("This is a typical paragraph.");
-  
-  doc.saveAndClose();
-  
-}
-
 function prueba2(){
   var doc = DocumentApp.getActiveDocument();
   var body = doc.getBody();
   
   //var r = /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/gmi;
-
+  //var r = /\\cite/
   var j = 0;
   var replacement = "[" + j.toString() + "]";
   //var toSearch = new RegExp(r2.source + r3.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
-  //var toSearch = "\cite{" + cite + "}";
-  body.editAsText().replaceText(r,replacement);
+  //var toSearch = "\cite{hola}";   // no borra la \ 
+  //var toSearch = "\\cite{hola}";   // error en la expresion regular ?¿?¿?¿?¿?
+  //var toSearch = /hola/; // no funciona ?¿?¿?¿?
+  /* var st = "\cite{hola}";    
+  var toSearch = new RegExp(st); */    // al igual que la anterior tampoco funciona ?¿?¿?¿?
+  body.editAsText().replaceText(toSearch, replacement);
+  
   doc.saveAndClose();
-  var prueba = 0;
+  return 0;
 }
+
+// INTENTO DE ELIMINAR EL PRIMER  \cite pero no funciona... inserta al principio del \cite en vez de borrarlo
+
 function prueba(){
-   
-  var placeHolder = "bibliography";
+  var doc = DocumentApp.getActiveDocument();
+  var body = doc.getBody();
+  var text = body.getText();  
+  var length = text.length;
+  var cite = "";
   
-  var d = DocumentApp.getActiveDocument()
-  var s = d.getBody();
-  var result = s.findText(placeHolder); 
-  var placeholderStart = result.getStartOffset(); 
-  var par = s.getChild(0).asParagraph();
-  var parcopy = par.copy();
-  var parLen = par.editAsText().getText().length-1;
-  Logger.log('placeholderStart = '+placeholderStart+'  parLen = '+parLen)
-  par.editAsText().deleteText(placeholderStart, parLen);
-  parcopy.editAsText().deleteText(0, placeholderStart+placeHolder.length);
-  var section = s.getChild(0).appendParagraph("Section 1");
+  if(length > 6){
+    cite = text[0] + text[1] + text[2] + text[3] + text[4] + text[5];    
+  }
   
-  section.setHeading(DocumentApp.ParagraphHeading.HEADING2);
   
-  // Append a regular paragraph.
-  var paragraph = s.getChild(1).appendParagraph("This is a typical paragraph.");  
-  //s.appendParagraph(parcopy);
-  parcopy.merge(); 
-  d.saveAndClose();
+  var encontrado = false;
+  var cont = 6;
+  var id = "";
+  var final = false;
+  var error = false;
+  var aux = 0;// se usa para comprobar errores
   
-   var prueba = "";
+  var posCite = 0;
+  
+  while(!encontrado && cont < length){
+    if( cite == "\\cite{"){
+      posCite = cont - 6;
+      encontrado = true;      
+      while(!final && cont < length){
+        if(text[cont] == "}"){
+          final = true;
+          body.editAsText().insertText(posCite, "[0]");  // PRUEBA!! NO FUNCIONA :(
+        }else{
+          var c = text[cont];
+          id = id + c;
+          aux++;
+          cont++;
+          if(aux == 40 || cont >= length){
+            final = true;
+            error = true;
+          }
+        }
+      }
+    }else{
+      var c = text[cont];
+      cite = cite.slice(1);
+      cite = cite + c;
+      cont++;
+    }    
+  }
+  if(!encontrado){
+    error = true;
+  }
+  
+  doc.saveAndClose();
+  return 0;
 }
 
 
-//VERSION ANTIGUAde la funcion sustitute
+//VERSION ANTIGUA de la funcion sustitute
 
 /*function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
   var bibtexDoc = [];
