@@ -1490,7 +1490,7 @@ function BibTex(options)
     'incollection',
     'inproceedings',
     'manual',
-    'masterthesis',
+    'mastersthesis',
     'misc',
     'phdthesis',
     'proceedings',
@@ -2687,6 +2687,73 @@ BibTex.prototype = {
     }
     return newMonth;
   },
+  
+ 'checkOptionalFieldsThesis': function(entry, ret){
+   if (array_key_exists('note', entry)) {
+     ret.note = this._unwrap(entry['note']);
+   }
+   if (array_key_exists('address', entry)) {
+     ret.address = this._unwrap(entry['address']);
+   }
+   if (array_key_exists('type', entry)) {
+     ret.type = this._unwrap(entry['type']);
+   }
+   if (array_key_exists('month', entry)) {          
+     var month = this._unwrap(entry['month']);
+     month = this.transformMonth(month);
+     ret.month = month;
+   }
+   if (array_key_exists('date-added', entry)) {
+     ret.date_added = entry['date-added'];
+   }
+   if (array_key_exists('date-modified', entry)) {
+     ret.date_modified = entry['date-modified'];
+   }
+   return ret;
+  },
+  
+  'checkOptionalFieldsProceeding': function(entry,ret){
+    
+    //Optional fields: editor, volume or number, series, address, publisher, note, month, organization.
+    
+    if (array_key_exists('editor', entry)) {
+      ret.editor = this._unwrap(entry['editor']);
+    }
+    if (array_key_exists('series', entry)) {
+      ret.series = this._unwrap(entry['series']);
+    }   
+    if (array_key_exists('address', entry)) {
+      ret.address = this._unwrap(entry['address']);
+    }   
+    if (array_key_exists('publisher', entry)) {
+      ret.publisher = this._unwrap(entry['publisher']);
+    }   
+    if (array_key_exists('note', entry)) {
+      ret.note = this._unwrap(entry['note']);
+    }   
+    if (array_key_exists('month', entry)) {           
+      var month = this._unwrap(entry['month']);
+      month = this.transformMonth(month);
+      ret.month = month;
+    }  
+    if (array_key_exists('organization', entry)) {
+      ret.organization = this._unwrap(entry['organization']);
+    }
+    
+    
+    if (array_key_exists('volume', entry) && array_key_exists('number', entry)) { //no puede existir los dos a la vez
+      ret.exito = false;
+    }else if(array_key_exists('volume', entry) || array_key_exists('number', entry)){ //si existe alguno de los dos los añado
+      if (array_key_exists('volume', entry)) {
+        ret.volume = this._unwrap(entry['volume']);
+      }
+      if (array_key_exists('number', entry)) {
+        ret.number = this._unwrap(entry['number']);
+      }
+    }
+    
+  }, 
+  
  'google': function(pos){
       var entry = this.data[pos];
       var line    = this.googlestring;
@@ -2808,19 +2875,24 @@ BibTex.prototype = {
             }
             
           }
-        break;        
-        case "inproceedings":
-          
-          //Required fields: author, title, booktitle, year.
-        
         break;
+          
         case "misc":
           
           //Required fields: none.
           //Optional fields: author, title, howpublished, month, year, note.
-          
+                    
           if (array_key_exists('author', entry)) {
             ret.author = entry['author'];
+          }
+          if (array_key_exists('date-added', entry)) {
+            ret.date_added = entry['date-added'];
+          }
+          if (array_key_exists('date-modified', entry)) {
+            ret.date_modified = entry['date-modified'];
+          }
+          if (array_key_exists('key', entry)) {
+            ret.key = entry['key'];
           }
           if (array_key_exists('title', entry)) {
             ret.title = this._unwrap(entry['title']);
@@ -2840,34 +2912,39 @@ BibTex.prototype = {
               ret.month = month;
           }
           
-          if(!array_key_exists('author', entry) && !array_key_exists('title', entry) && !array_key_exists('howpublished', entry) && !array_key_exists('year', entry) && !array_key_exists('note', entry) && !array_key_exists('month', entry)){
+          //si no existe ningun campo optional es que el documento está vacio --> ERROR
+          if(!array_key_exists('date-added', entry) && !array_key_exists('date-modified', entry) && !array_key_exists('key', entry) && !array_key_exists('author', entry) && !array_key_exists('title', entry) && !array_key_exists('howpublished', entry) && !array_key_exists('year', entry) && !array_key_exists('note', entry) && !array_key_exists('month', entry)){
             ret.exito = false;
           }else{
             ret.exito = true;
           }
-        
+                  
         break;
         case "mastersthesis":
 
           //Required fields: author, title, school, year.
-          
+                             
           var exito = this.checkRequieredFields(entry, ret);
           ret.exito = exito;
          
           if(exito){
-          
+            ret = this.checkOptionalFieldsThesis(entry, ret);
+            
+            if (array_key_exists('publisher', entry)) {
+              ret.publisher = this._unwrap(entry['publisher']);
+            }
           }
         
         break;
         case "phdthesis":
           
           //Required fields: author, title, school, year.
-          
+                    
           var exito = this.checkRequieredFields(entry, ret);
           ret.exito = exito;
          
           if(exito){
-          
+            ret = this.checkOptionalFieldsThesis(entry, ret);
           }
           
         break;
@@ -2883,6 +2960,41 @@ BibTex.prototype = {
           }
           
         break;
+          
+        case "inproceedings":
+          
+          //Required fields: author, title, booktitle, year
+          //Optional fields: editor, volume or number, series, address, publisher, note, month, organization, pages.
+          
+          var exito = this.checkRequieredFields(entry, ret);
+          ret.exito = exito;
+         
+          if(exito){            
+            ret = this.checkOptionalFieldsProceeding(entry, ret);
+            
+            if (array_key_exists('pages', entry)) {
+              ret.pages = this._unwrap(entry['pages']);
+            }
+          }
+          
+        break;
+        
+        case "proceedings":
+          
+          //Required fields: title, year.
+          //Optional fields: editor, volume or number, series, address, publisher, note, month, organization.
+          
+          
+          
+          var exito = this.checkRequieredFields(entry, ret);
+          ret.exito = exito;
+         
+          if(exito){
+            ret = this.checkOptionalFieldsProceeding(entry, ret);
+          }
+          
+        break;
+          
       }
       
       ret.entryType = entry['entryType'];      
