@@ -1958,9 +1958,11 @@ BibTex.prototype = {
             var von      = '';
             var last     = '';
             var jr       = '';
+          
+            var prueba = author.indexOf("{\'a}");
             
             //comprobar si existen posible acentos              
-            if (author.indexOf("{\'a}") >= 0){
+            if (author.indexOf("{\\'a}") >= 0){          
                 author = author.replace("{\\'a}", "á");
             }else if (author.indexOf("\'{a}") >= 0){
                 author = author.replace("\\'{a}", "á");
@@ -1968,7 +1970,7 @@ BibTex.prototype = {
                 author = author.replace("\\'a", "á");
             }
 
-            if (author.indexOf("{\'e}") >= 0){
+            if (author.indexOf("{\\'e}") >= 0){
                 author = author.replace("{\\'e}", "é");
             }else if (author.indexOf("\'{e}") >= 0){
                 author = author.replace("\\'{e}", "é");
@@ -1976,7 +1978,7 @@ BibTex.prototype = {
                 author = author.replace("\\'e", "é");
             } 
 
-            if (author.indexOf("{\'i}") >= 0){
+            if (author.indexOf("{\\'i}") >= 0){
                 author = author.replace("{\\'i}", "í");
             }else if (author.indexOf("\'{i}") >= 0){
                 author = author.replace("\\'{i}", "í");
@@ -1984,7 +1986,7 @@ BibTex.prototype = {
                 author = author.replace("\\'i", "í");
             } 
 
-            if (author.indexOf("{\'o}") >= 0){
+            if (author.indexOf("{\\'o}") >= 0){
                 author = author.replace("{\\'o}", "ó");
             }else if (author.indexOf("\'{o}") >= 0){
                 author = author.replace("\\'{o}", "ó");
@@ -1992,7 +1994,7 @@ BibTex.prototype = {
                 author = author.replace("\\'o", "ó");
             } 
 
-            if (author.indexOf("{\'u}") >= 0){
+            if (author.indexOf("{\\'u}") >= 0){
                 author = author.replace("{\\'u}", "ú");
             }else if (author.indexOf("\'{u}") >= 0){
                 author = author.replace("\\'{u}", "ú");
@@ -2688,7 +2690,7 @@ BibTex.prototype = {
     return newMonth;
   },
   
- 'checkOptionalFieldsThesis': function(entry, ret){
+ 'checkOptionalFieldsThesis': function(entry, ret){ 
    if (array_key_exists('note', entry)) {
      ret.note = this._unwrap(entry['note']);
    }
@@ -2752,6 +2754,7 @@ BibTex.prototype = {
       }
     }
     
+    return ret;
   }, 
   
  'google': function(pos){
@@ -2769,7 +2772,18 @@ BibTex.prototype = {
           ret.exito = exito;
          
           if(exito){   // SI NO HAY EXITO (FALTA ALGUN CAMPO OBLIGATORIO MANDAR FALLO
-          
+            
+            if(array_key_exists('volume', entry) && array_key_exists('number', entry)){  //no puede existir los dos a la vez
+              ret.exito = false;
+            }else if(array_key_exists('volume', entry) || array_key_exists('number', entry)){
+              if (array_key_exists('volume', entry)) {
+                ret.volume = this._unwrap(entry['volume']);
+              }
+              if (array_key_exists('number', entry)) {
+                ret.number = this._unwrap(entry['number']);
+              }
+            }            
+            
             if (array_key_exists('month', entry)) {           
               var month = this._unwrap(entry['month']);
               month = this.transformMonth(month);
@@ -2778,14 +2792,11 @@ BibTex.prototype = {
             if (array_key_exists('series', entry)) {
               ret.series = this._unwrap(entry['series']);
             }
-            if (array_key_exists('volume', entry)) {
-              ret.volume = this._unwrap(entry['volume']);
+            if (array_key_exists('edition', entry)) {
+              ret.edition = this._unwrap(entry['edition']);
             }
             if (array_key_exists('isbn', entry)) {
               ret.isbn = this._unwrap(entry['isbn']);
-            }
-            if (array_key_exists('issn', entry)) {
-              ret.issn = this._unwrap(entry['issn']);
             }
             if (array_key_exists('pages', entry)) {
               ret.pages = this._unwrap(entry['pages']);
@@ -2808,11 +2819,8 @@ BibTex.prototype = {
             if (array_key_exists('booktitle', entry)) {
               ret.booktitle = this._unwrap(entry['booktitle']);
             }
-            if (array_key_exists('number', entry)) {
-              ret.number = this._unwrap(entry['number']);
-            }
             if (array_key_exists('key', entry)) {
-              key = this._unwrap(entry['key']);
+              ret.key = this._unwrap(entry['key']);
             }
             if (array_key_exists('annote', entry)) {
               ret.annote = this._unwrap(entry['annote']);
@@ -2904,7 +2912,7 @@ BibTex.prototype = {
             ret.year = this._unwrap(entry['year']);
           }
           if (array_key_exists('note', entry)) {
-            ret.note = this._unwrap(entry['note']);
+            ret.note = this._unwrap(entry['note']);   
           }
           if (array_key_exists('month', entry)) {          
               var month = this._unwrap(entry['month']);
@@ -2951,12 +2959,64 @@ BibTex.prototype = {
         case "techreport":
           
           //Required fields: author, title, institution, year.
-          
+                   
           var exito = this.checkRequieredFields(entry, ret);
           ret.exito = exito;
          
           if(exito){
-          
+            if (array_key_exists('source', entry)) {
+              ret.source = this._unwrap(entry['source']);
+            }
+            if (array_key_exists('institution', entry)) {
+              ret.institution = this._unwrap(entry['institution']);
+            }
+            if (array_key_exists('pdfurl', entry)) {
+              ret.pdfurl = this._unwrap(entry['pdfurl']);
+            }
+            if (array_key_exists('booktitle', entry)) {
+              ret.booktitle = this._unwrap(entry['booktitle']);
+            }
+            if (array_key_exists('bdsk-url-1', entry)) {
+              ret.bdsk_url_1 = this._unwrap(entry['bdsk-url-1']);
+            }
+            if (array_key_exists('pages', entry)) {
+              ret.pages = this._unwrap(entry['pages']);
+            }
+            if (array_key_exists('address', entry)) {
+              ret.address = this._unwrap(entry['address']);
+            }
+            if (array_key_exists('number', entry)) {
+              ret.number = this._unwrap(entry['number']);
+            }
+            if (array_key_exists('keywords', entry)) {
+              ret.keywords = this._unwrap(entry['keywords']);
+            }
+            if (array_key_exists('date-added', entry)) {
+              ret.date_added = entry['date-added'];
+            }
+            if (array_key_exists('date-modified', entry)) {
+              ret.date_modified = entry['date-modified'];
+            }
+            if (array_key_exists('url', entry)) {
+              ret.url = this._unwrap(entry['url']);
+            }
+            if (array_key_exists('publisher', entry)) {
+              ret.publisher = this._unwrap(entry['publisher']);
+            }
+            if (array_key_exists('note', entry)) {
+              ret.note = this._unwrap(entry['note']);
+            }
+            if (array_key_exists('type', entry)) {
+              ret.type = this._unwrap(entry['type']);
+            }
+            if (array_key_exists('month', entry)) {          
+              var month = this._unwrap(entry['month']);
+              month = this.transformMonth(month);
+              ret.month = month;
+            }                        
+            /*if (array_key_exists('ymas', entry)) {
+              ret.ymas = this._unwrap(entry['ymas']);
+            }*/
           }
           
         break;
