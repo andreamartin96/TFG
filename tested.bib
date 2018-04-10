@@ -1,9 +1,5 @@
 
 //ejemplo para probar que funciona la identificacion de las partes en los nombre de los autores (von, first, last y jr).
-//para probar tambien si transforma Adri\'an en Adrián.
-//para probar tambien si pasea correctamente el mes.
-
-//factor problematico: Íñigo
 
 @article{Krinke:2003:CSC,
  author = {Íñigo de la Serna and Enrique Martin-Martin and Adri\'an Riesco and Rogier van der Weyden and Charles de la Croix and Giacomo della Porta},
@@ -22,6 +18,22 @@
  publisher = {ACM},
  keywords = {concurrency, context-sensitive, parallelism, program analysis, program slicing},
  
+}
+
+//ejemplo para probar nombres de autores con tildes y simbolos(otros idiomas ¨, ^ ....)
+
+@article{Tamarit2016,
+	author="Âdri{\'a}n de la Serna and Ênrique de la Martin and Îafael del Riesco and Ôafael van der Weyden and Ûafael de la Croix and Ädri{\'a}n della Porta and Ënrique del Martin and Ïafael della Riesco and Öafael van der Weyden and Üafael de la Croix and ßdri{\'a}n della Porta",
+	editor="Aichernig, K. Bernhard	and Furia, A. Carlo",
+	title="{D}ebugging {M}eets {T}esting in {E}rlang",
+	bookTitle="Proceedings of the 10th International Conference on Tests and Proofs (TAP 2016)",
+	year="2016",
+	publisher="Springer International Publishing",
+	Series = {Lecture Notes in Computer Science},
+	volume={9762},
+	pages="171--180",
+	isbn="978-3-319-41135-4",
+	doi="10.1007/978-3-319-41135-4_10"
 }
 
 
@@ -44,7 +56,17 @@
  
 }
 
-//ejemplo para probar el campo title
+//ejemplo para probar la transformacion del campo 'month'
+@book{pi-calculus,
+	Author = {Robin Milner},
+	Isbn = {0521658691},
+	Month = {sep},
+	Publisher = {Cambridge University Press},
+	Title = {Communicating and Mobile Systems: the Pi-Calculus},
+	Year = {1999}
+}
+
+//ejemplo para probar el campo title con {T}
 
 @book{LearnYouSomeErlang,
 	author = {Fred Hebert},
@@ -53,58 +75,6 @@
 	year = {2013},
 	note = {Also available at \url{http://learnyousomeerlang.com}}
 } 
-
-/* regex utilizada: /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/
-
-CLAVES PROBADAS Y QUE FUNCIONAN:
-
-\cite{hola:16}
-\cite{hola}
-\cite{Caballero2015104}
-\cite{pedersen2012error}
-\cite{Agha:1986:AMC}
-\cite{ho-la}
-\cite{h_ola}
-\cite{Agha:al1986}
-\cite{Aer1986:AMC}
-
-
-*/
-
-//ejemplo de clave que no funciona(demasiadas combinaciones posibles)
-@article{Dean:2008:MSD:1327452.1327492,
- author = {Dean, Jeffrey and Ghemawat, Sanjay},
- title = {MapReduce: Simplified Data Processing on Large Clusters},
- journal = {Commun. ACM},
- issue_date = {January 2008},
- volume = {51},
- number = {1},
- month = jan,
- year = {2008},
- issn = {0001-0782},
- pages = {107--113},
- numpages = {7},
- url = {http://doi.acm.org/10.1145/1327452.1327492},
- doi = {10.1145/1327452.1327492},
- acmid = {1327492},
- publisher = {ACM},
- address = {New York, NY, USA},
-} 
-
-//ejemplo de clave que no funciona(demasiadas combinaciones posibles)
-@inproceedings{cgs12a-flops2012,
- author    = {Rafael Caballero and
-              Yolanda Garc\'{\i}a-Ruiz and
-              Fernando S{\'a}enz-P{\'e}rez},
- title = {Declarative Debugging of Wrong and Missing Answers for {SQL} Views},
- booktitle = {11th International Symposium on Functional and Logic Programming
- (FLOPS 2012)},
- year = {2012},
- series = {LNCS},
- publisher = {Springer-Verlag},
- volume   = {7294}
-}
-
 
 //ejemplo de entrada que no funciona (falta el campo obligatorio 'year')
 
@@ -115,3 +85,17 @@ CLAVES PROBADAS Y QUE FUNCIONAN:
 	publisher = {Elsevier Science Inc.},
 	address = {New York, NY, USA},
 }
+
+//ejemplo de entrada que no funciona (faltan todos los posibles campos opcionales pues la entrada del tipo misc debe tener al menos un campo opcional)
+
+@misc{neuhausser_diplomarbeit,
+	
+}
+
+//ejemplo de entrada del tipo misc
+
+@misc{neuhausser_diplomarbeit,
+	Author = {Neuh\"{a}u{\ss}er, Martin},
+	Note = {RWTH Aachen University, Diplomarbeit},
+	Title = {Abstraktion und Model Checking von {C}ore {E}rlang-Programmen in {M}aude},
+	Year = {2005}}

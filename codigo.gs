@@ -1,3 +1,15 @@
+
+
+
+
+/*
+
+         FALTA PROBAR EL RESTO DE CASE NUEVOS (salvo el de misc) Y SI NO DA ERROR LOS NUEVOS CAMPOS DEL checkRequieredFields
+
+*/ 
+
+
+
 /**
  * @OnlyCurrentDoc
  *
@@ -73,14 +85,11 @@ function getCites(){ //Obtiene todos los \cite encontrados en el documento actua
   
   EXPLICACION DE LA REGEX: 
   
-  - \w{1, 40}   ---->  identifica una palabra de 1 a 40 letras
-  - \d{1, 40}   ---->  identifica una palabra de 1 a 40 digitos
-  -  ( | )    ---->  OR logica
-  -  \\    ---->  caracter especial \
+  - .*  ---> cualquier carácter excepto 'line terminators' (\u , \w , ....)
   
   */
   
-  var r = /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/gmi;
+  var r = /\\cite{.*}/gmi;
   var regex = new RegExp(r);
   
   var solutionArray = [];
@@ -135,11 +144,11 @@ function prueba2(){
   var j = 0;
   var replacement = "[" + j.toString() + "]";
   //var toSearch = new RegExp(r2.source + r3.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
-  //var toSearch = "\cite{hola}";   // no borra la \ 
+  var toSearch = "\\\\cite{hola}";   // no borra la \ 
   //var toSearch = "\\cite{hola}";   // error en la expresion regular ?¿?¿?¿?¿?
   //var toSearch = /hola/; // no funciona ?¿?¿?¿?
-  /* var st = "\cite{hola}";    
-  var toSearch = new RegExp(st); */    // al igual que la anterior tampoco funciona ?¿?¿?¿?
+  /*var st = "\\cite{hola}";    
+  var toSearch = new RegExp(st);*/     // al igual que la anterior tampoco funciona ?¿?¿?¿?
   body.editAsText().replaceText(toSearch, replacement);
   
   doc.saveAndClose();
@@ -228,60 +237,46 @@ function prueba(){
 }*/
 
 
+/*
+
+bibtexDoc[i] = JSON.stringify(bibtex_dict[clave]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
+
+*/
+
+
 function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){ //remplaza todos los \cite{id} 
-  var bibtexDoc = [];
+ 
   var lo = arrayCitesId.length;
   var exito = true;
   var i = 0;
+  var clavesEncontradas = []; //contendrá todas aquellas claves del documento actual que se encuentren en el .bib
+  var clavesNoEncontradas = []; //contendrá todas aquellas claves del documento actual que NO se encuentren en el .bib
   while( i < arrayCitesId.length){  //para cada clave encuentro su informacion correspondiente del .bib
-    var clave = arrayCitesId[i]; 
-    var prueba = bibtex_dict[clave];
-    if(bibtex_dict[clave] !== undefined){ //si es undefined es que la clave no existe en el archivo .bib
-      bibtexDoc[i] = JSON.stringify(bibtex_dict[clave]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
-      i++;
-    }else{
-      exito = false; //existe una clave en el documento que no esta definida en el .bib
-    }
-  }
-  
-  for(var j = 0; j < bibtexDoc.length; j++){  
-    var regex = /\/cite\{/  
-    var r2 = /\/cite/g;
-    var r3 = /\{/;                                         //POSIBLE SOLUCION!! SIGO PROBANDO A VER SI CONSIGO BORRAR LA \
-    var r5 = /\}/;
-    var cite = arrayCitesId[j];
-    cite = "/" + cite + "/";
-    var replacement = "[" + j.toString() + "]";
-    var toSearch = new RegExp(regex.source + cite + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
-    //var toSearch = "cite{" + cite + "}";
-    if(body2.editAsText().replaceText(toSearch,replacement) === null){
+    var clave = arrayCitesId[i];
+    if(bibtex_dict[clave] === undefined){ //si es undefined es que la clave no existe en el archivo .bib
       exito = false;
+      clavesNoEncontradas[i] = clave;
     }
+    else{
+      clavesEncontradas[i] = clave;
+    }
+    i++;
   }
   
-   
-   /*
-  
-  for(var j = 0; j < arrayCitesId.length; j++){  
-    var cite = arrayCitesId[j];
-    var replacement = "[" + j.toString() + "]";
-    var toSearch = "cite{" + cite + "}";
+  //var references = apply_style(bibtex_dict['clave'], bibtex_dict, style, clavesEncontradas);
+  var references = [];
+  references[0] = {cite: "Krinke:2003:CSC", name: "[Krin03]", text: "Esto es un ejemplo de bibliografia para la clave Krinke:2003:CSC"};
+ 
+  for(var j = 0; j < references.length; j++){
+    var toSearch = "\\\\cite{" + references[j].cite + "}";
+    var replacement = references[j].name;
     if(body2.editAsText().replaceText(toSearch,replacement) === null){
-      exito = false;
+      exito = false; //error al reemplazar en el documento
     }
-
   }
-   
-  */
   
- /*body2.appendHorizontalRule();
-  for(var i = 0; i < arrayCitesId.length; i++){  
-    var cite = arrayCitesId[i];
-    var text = "[" + i.toString() + "]      ----     " + bibtex_dict[cite]["title"] + " | " + bibtex_dict[cite]["authors"] + " | " + bibtex_dict[cite]["year"];
-    body2.appendParagraph(text);
-
-  }*/
   doc.saveAndClose();
+
   return exito;
 }
 
@@ -372,6 +367,8 @@ function getBibtexAndDoc(e){
     var body = doc.getBody();
     var texto = body.getText();
     exito = sustitute(arrayCites, arrayCitesId, body, bibtex_dict, doc);
+  }else{
+    //LANZAR EXCEPCION??¿?¿?¿?
   }
   
   return exito;
@@ -1940,7 +1937,7 @@ BibTex.prototype = {
         }
         return entry;
     },
-
+  
     /**
      * Extracting the authors
      *
@@ -1948,11 +1945,12 @@ BibTex.prototype = {
      * @param string entry The entry with the authors
      * @return array the extracted authors
      */
-  '_extractAuthors': function(entry) {  // FUNCIONA MAL PARA AQUELLOS CASOS EN EL QUE LA PARTE FIRST LA PRIMERA LETRA  
-        entry       = this._unwrap(entry);  // TIENE UNA TILDE -> EJEMPLO: Íñigo
+      '_extractAuthors': function(entry) {   
+        entry       = this._unwrap(entry);  
         var authorarray = array();
         authorarray = split(' and ', entry);
         for (var i = 0; i < sizeof(authorarray); i++) {
+                       
             var author = trim(authorarray[i]);
             /*The first version of how an author could be written (First von Last)
              has no commas in it*/
@@ -1961,48 +1959,47 @@ BibTex.prototype = {
             var last     = '';
             var jr       = '';
             
-          //comprobar si existen posible acentos              
-          if (author.indexOf("{\'a}") >= 0){
-            author = author.replace("{\\'a}", "á");
-          }else if (author.indexOf("\'{a}") >= 0){
-            author = author.replace("\\'{a}", "á");
-          }else if (author.indexOf("\'a") >= 0){
-            author = author.replace("\\'a", "á");
-          }
-          
-          if (author.indexOf("{\'e}") >= 0){
-            author = author.replace("{\\'e}", "é");
-          }else if (author.indexOf("\'{e}") >= 0){
-            author = author.replace("\\'{e}", "é");
-          }else if (author.indexOf("\'e") >= 0){
-            author = author.replace("\\'e", "é");
-          } 
-          
-          if (author.indexOf("{\'i}") >= 0){
-            author = author.replace("{\\'i}", "í");
-          }else if (author.indexOf("\'{i}") >= 0){
-            author = author.replace("\\'{i}", "í");
-          }else if (author.indexOf("\'i") >= 0){
-            author = author.replace("\\'i", "í");
-          } 
-          
-          if (author.indexOf("{\'o}") >= 0){
-            author = author.replace("{\\'o}", "ó");
-          }else if (author.indexOf("\'{o}") >= 0){
-            author = author.replace("\\'{o}", "ó");
-          }else if (author.indexOf("\'o") >= 0){
-            author = author.replace("\\'o", "ó");
-          } 
-          
-          if (author.indexOf("{\'u}") >= 0){
-            author = author.replace("{\\'u}", "ú");
-          }else if (author.indexOf("\'{u}") >= 0){
-            author = author.replace("\\'{u}", "ú");
-          }else if (author.indexOf("\'u") >= 0){
-            author = author.replace("\\'u", "ú");
-          } 
-              
-          
+            //comprobar si existen posible acentos              
+            if (author.indexOf("{\'a}") >= 0){
+                author = author.replace("{\\'a}", "á");
+            }else if (author.indexOf("\'{a}") >= 0){
+                author = author.replace("\\'{a}", "á");
+            }else if (author.indexOf("\'a") >= 0){
+                author = author.replace("\\'a", "á");
+            }
+
+            if (author.indexOf("{\'e}") >= 0){
+                author = author.replace("{\\'e}", "é");
+            }else if (author.indexOf("\'{e}") >= 0){
+                author = author.replace("\\'{e}", "é");
+            }else if (author.indexOf("\'e") >= 0){
+                author = author.replace("\\'e", "é");
+            } 
+
+            if (author.indexOf("{\'i}") >= 0){
+                author = author.replace("{\\'i}", "í");
+            }else if (author.indexOf("\'{i}") >= 0){
+                author = author.replace("\\'{i}", "í");
+            }else if (author.indexOf("\'i") >= 0){
+                author = author.replace("\\'i", "í");
+            } 
+
+            if (author.indexOf("{\'o}") >= 0){
+                author = author.replace("{\\'o}", "ó");
+            }else if (author.indexOf("\'{o}") >= 0){
+                author = author.replace("\\'{o}", "ó");
+            }else if (author.indexOf("\'o") >= 0){
+                author = author.replace("\\'o", "ó");
+            } 
+
+            if (author.indexOf("{\'u}") >= 0){
+                author = author.replace("{\\'u}", "ú");
+            }else if (author.indexOf("\'{u}") >= 0){
+                author = author.replace("\\'{u}", "ú");
+            }else if (author.indexOf("\'u") >= 0){
+                author = author.replace("\\'u", "ú");
+            }
+
             if (strpos(author, ',') === false) {
                 var tmparray = array();
                 //tmparray = explode(' ', author);
@@ -2068,9 +2065,9 @@ BibTex.prototype = {
                 var tmparray     = array();
                 tmparray     = explode(',', author);
                 //The first entry must contain von and last
-                vonlastarray = array();
+                var vonlastarray = array();
                 vonlastarray = explode(' ', tmparray[0]);
-                size         = sizeof(vonlastarray);
+                var size         = sizeof(vonlastarray);
                 if (1==size) { //Only one entry.got to be the last
                     last = vonlastarray[0];
                 } else {
@@ -2110,10 +2107,23 @@ BibTex.prototype = {
                 //Everything in the last entry is first
                 first = tmparray[sizeof(tmparray)-1];
             }
+
             authorarray[i] = {'first':trim(first), 'von':trim(von), 'last':trim(last), 'jr':trim(jr)};
         }
         return authorarray;
     },
+  
+  
+  'checkSpecialChars': function(ordv){
+    
+    var isSpecialChar = false;
+    
+    if(ordv>=192 && ordv <= 223){
+      isSpecialChar = true;
+    }
+    
+    return isSpecialChar;
+  },
 
     /**
      * Case Determination according to the needs of BibTex
@@ -2128,6 +2138,8 @@ BibTex.prototype = {
      * @param string word
      * @return int The Case or PEAR_Error if there was a problem
      */
+  
+  
     '_determineCase': function(word) {
         var ret         = -1;
         var trimmedword = trim (word);
@@ -2152,7 +2164,7 @@ BibTex.prototype = {
                 } else if ( (ordv>=97) && (ordv<=122) && (0==openbrace) ) { //The first character is lowercase
                     ret   = 0;
                     found = true;
-                } else if(((ordv==193) || (ordv==201) || (ordv==205) || (ordv==211) || (ordv==218)) && (0==openbrace)){ //si la 1º letra es mayus con tilde
+                } else if(this.checkSpecialChars(ordv) && (0==openbrace)){ //si la 1º letra es mayus con tilde
                     ret   = 1;
                     found = true;
                 }else{ //Not yet found
@@ -2540,34 +2552,80 @@ BibTex.prototype = {
   'checkRequieredFields' : function(entry, ret)
    {
      
-     var exito = true;
+     var exito = true;  
+     
+     if (entry['entryType'] == "inproceedings") {
+       if(array_key_exists('booktitle', entry)){
+         ret.booktitle = this._unwrap(entry['booktitle']);    // inproceedings --> booktitle
+       }
+       else{
+         exito = false;
+       }
+     }
+     
+     
+     if (entry['entryType'] == "mastersthesis" || entry['entryType'] == "phdthesis" ) {
+       if(array_key_exists('school', entry)){
+         ret.school = this._unwrap(entry['school']);    // mastersthesis o phdthesis --> school
+       }
+       else{
+         exito = false;
+       }
+     }
+     
+     
+     if (entry['entryType'] == "techreport") {
+       if(array_key_exists('institution', entry)){
+         ret.institution = this._unwrap(entry['institution']);    // techreport --> institution
+       }
+       else{
+         exito = false;
+       }
+     }
+     
+     
+     
+     
+     if (entry['entryType'] == "book") {
+       if(array_key_exists('publisher', entry)){
+         ret.publisher = this._unwrap(entry['publisher']);    // BOOK --> PUBLISHER
+       }
+       else{
+         exito = false;
+       }
+     }
+     
+     
+     if (entry['entryType'] == "article") {
+       if(array_key_exists('journal', entry)){             //ARTICLE --> JOURNAL
+         ret.journal = this._unwrap(entry['journal']);
+       }
+       else{
+         exito = false;
+       }
+     }
+     
      if (array_key_exists('title', entry)) {
-       //obligar a que exista
-       ret.title = this._unwrap(entry['title']);
+       ret.title = this._unwrap(entry['title']);   // TITLE
      }
      else{
        exito = false;
      }
-     if (array_key_exists('publisher', entry) && entry['entryType'] == "book") {
-       ret.publisher = this._unwrap(entry['publisher']);
-     }
-     if (array_key_exists('journal', entry) && entry['entryType'] == "article") {
-       ret.publisher = this._unwrap(entry['publisher']);
-     }
-     else{
-       exito = false;
-     }
+     
+     
      if (array_key_exists('year', entry)) {
-       ret.year = this._unwrap(entry['year']);
+       ret.year = this._unwrap(entry['year']);               //YEAR
      }
      else{
        exito = false;
      }
+     
+     
      //Existe alguno de los dos??
      if(entry['entryType'] == "book"){
        if (array_key_exists('editor', entry) || array_key_exists('author', entry)) {
-         if (array_key_exists('author', entry)) { //
-           ret.authors = entry['author'];
+         if (array_key_exists('author', entry)) { 
+           ret.authors = entry['author'];                                                   //BOOK ---> EDITOR O AUTHOR
          }
          if (array_key_exists('editor', entry)) {
            ret.editor = this._unwrap(entry['editor']);
@@ -2575,80 +2633,79 @@ BibTex.prototype = {
          
        }else{
          exito = false;
-       }
-     } else if(entry['entryType'] == "article"){
+       }       
+     }else{
        if (array_key_exists('author', entry)) { 
-           ret.authors = entry['author'];
+           ret.authors = entry['author'];                           //AUTHOR
        }else{
          exito = false;
        }
      }
      return exito;
     },
-  'google': function(pos)
-    {
+  'transformMonth': function(month){
+    var newMonth = month;
+    switch(month){
+      case 'jan':
+        newMonth = 'January';
+        break;
+      case 'feb':
+        newMonth = 'February';
+        break;
+      case 'mar':
+        newMonth = 'March';
+        break;
+      case 'apr':
+        newMonth = 'April';
+        break;
+      case 'may':
+        newMonth = 'May';
+        break;
+      case 'jun':
+        newMonth = 'June';
+        break;
+      case 'jul':
+        newMonth = 'July';
+        break;
+      case 'aug':
+        newMonth = 'August';
+        break;
+      case 'sep':
+        newMonth = 'September';
+        break;
+      case 'oct':
+        newMonth = 'October';
+        break;
+      case 'nov':
+        newMonth = 'November';
+        break;
+      case 'dec':
+        newMonth = 'December';
+        break;
+      default:
+        //no hago nada              
+    }
+    return newMonth;
+  },
+ 'google': function(pos){
       var entry = this.data[pos];
       var line    = this.googlestring;
       
-      var ret = {}   
-      
-      ret.entryType = entry['entryType'];      
-      ret.clave = entry['cite'];
-      
-      switch(entry['entryType']){
+      var ret = {};
         
+      switch(entry['entryType']){
         case "book":
           
-          //CAMPOS OBLIGATORIOS: author or editor, title, publisher, year
-          //CAMPOS OPCIONALES: resto...
+          //Required fields: author or editor, title, publisher, year.
           
           var exito = this.checkRequieredFields(entry, ret);
           ret.exito = exito;
          
-          if(exito){
+          if(exito){   // SI NO HAY EXITO (FALTA ALGUN CAMPO OBLIGATORIO MANDAR FALLO
           
-            if (array_key_exists('month', entry)) {           // SI NO HAY EXITO (FALTA ALGUN CAMPO OBLIGATORIO MANDAR FALLO
+            if (array_key_exists('month', entry)) {           
               var month = this._unwrap(entry['month']);
-              switch(month){
-                case 'jan':
-                  month = 'January';
-                  break;
-                case 'feb':
-                  month = 'February';
-                  break;
-                case 'mar':
-                  month = 'March';
-                  break;
-                case 'apr':
-                  month = 'April';
-                  break;
-                case 'may':
-                  month = 'May';
-                  break;
-                case 'jun':
-                  month = 'June';
-                  break;
-                case 'jul':
-                  month = 'July';
-                  break;
-                case 'aug':
-                  month = 'August';
-                  break;
-                case 'sep':
-                  month = 'September';
-                  break;
-                case 'oct':
-                  month = 'October';
-                  break;
-                case 'nov':
-                  month = 'November';
-                  break;
-                case 'dec':
-                  month = 'December';
-                  break;
-                default:
-                  //nothing               
-              }
+              month = this.transformMonth(month);
               ret.month = month;
             }            
             if (array_key_exists('series', entry)) {
@@ -2694,10 +2751,11 @@ BibTex.prototype = {
               ret.annote = this._unwrap(entry['annote']);
             }
             
-          }
-          return ret;                 
+          }                 
         break;
         case "article":     
+          
+          //Required fields: author, title, journal, year.
           
           var exito = this.checkRequieredFields(entry, ret);
           ret.exito = exito;          
@@ -2722,50 +2780,11 @@ BibTex.prototype = {
             if (array_key_exists('publisher', entry)) {
               ret.publisher = this._unwrap(entry['publisher']);
             }
-            if (array_key_exists('month', entry)) {
+            if (array_key_exists('month', entry)) {          
               var month = this._unwrap(entry['month']);
-              switch(month){
-                case 'jan':
-                  month = 'January';
-                  break;
-                case 'feb':
-                  month = 'February';
-                  break;
-                case 'mar':
-                  month = 'March';
-                  break;
-                case 'apr':
-                  month = 'April';
-                  break;
-                case 'may':
-                  month = 'May';
-                  break;
-                case 'jun':
-                  month = 'June';
-                  break;
-                case 'jul':
-                  month = 'July';
-                  break;
-                case 'aug':
-                  month = 'August';
-                  break;
-                case 'sep':
-                  month = 'September';
-                  break;
-                case 'oct':
-                  month = 'October';
-                  break;
-                case 'nov':
-                  month = 'November';
-                  break;
-                case 'dec':
-                  month = 'December';
-                  break;
-                default:
-                  //nothing               
-              }
+              month = this.transformMonth(month);
               ret.month = month;
-            }
+            } 
             if (array_key_exists('volume', entry)) {
               ret.volume = this._unwrap(entry['volume']);
             }
@@ -2789,52 +2808,89 @@ BibTex.prototype = {
             }
             
           }
-          return ret;
-        break;
+        break;        
         case "inproceedings":
+          
+          //Required fields: author, title, booktitle, year.
         
         break;
         case "misc":
+          
+          //Required fields: none.
+          //Optional fields: author, title, howpublished, month, year, note.
+          
+          if (array_key_exists('author', entry)) {
+            ret.author = entry['author'];
+          }
+          if (array_key_exists('title', entry)) {
+            ret.title = this._unwrap(entry['title']);
+          }
+          if (array_key_exists('howpublished', entry)) {
+            ret.howpublished = this._unwrap(entry['howpublished']);
+          }
+          if (array_key_exists('year', entry)) {
+            ret.year = this._unwrap(entry['year']);
+          }
+          if (array_key_exists('note', entry)) {
+            ret.note = this._unwrap(entry['note']);
+          }
+          if (array_key_exists('month', entry)) {          
+              var month = this._unwrap(entry['month']);
+              month = this.transformMonth(month);
+              ret.month = month;
+          }
+          
+          if(!array_key_exists('author', entry) && !array_key_exists('title', entry) && !array_key_exists('howpublished', entry) && !array_key_exists('year', entry) && !array_key_exists('note', entry) && !array_key_exists('month', entry)){
+            ret.exito = false;
+          }else{
+            ret.exito = true;
+          }
         
         break;
         case "mastersthesis":
+
+          //Required fields: author, title, school, year.
+          
+          var exito = this.checkRequieredFields(entry, ret);
+          ret.exito = exito;
+         
+          if(exito){
+          
+          }
         
         break;
-        default:
+        case "phdthesis":
+          
+          //Required fields: author, title, school, year.
+          
+          var exito = this.checkRequieredFields(entry, ret);
+          ret.exito = exito;
+         
+          if(exito){
+          
+          }
+          
+        break;
+        case "techreport":
+          
+          //Required fields: author, title, institution, year.
+          
+          var exito = this.checkRequieredFields(entry, ret);
+          ret.exito = exito;
+         
+          if(exito){
+          
+          }
+          
+        break;
       }
       
-      /*if (array_key_exists('title', entry)) {
-        title = this._unwrap(entry['title']);
-      }
-      if (array_key_exists('journal', entry)) {
-        journal = this._unwrap(entry['journal']);
-      }
-      if (array_key_exists('year', entry)) {
-        year = this._unwrap(entry['year']);
-      }
-      if (array_key_exists('author', entry)) {
-        if (this._options['extractAuthors']) {
-          tmparray = array(); //In this array the authors are saved and the joind with an and
-          for (j in entry['author'] ) {
-            var authorentry = entry['author'][j];
-            tmparray[tmparray.length] = this._formatAuthor(authorentry);
-          }
-          authors = join(', ', tmparray);
-        } else {
-          authors = entry['author'];
-        }
-      }
-      return {title: title, journal: journal, year: year, authors: authors}*/
-      /*
-      if ((''!=title) || (''!=journal) || (''!=year) || (''!=authors)) {
-        return {title: title, journal: journal, year: year, authors: authors}
-          } else {
-            this._generateWarning('WARNING_LINE_WAS_NOT_CONVERTED', '', print_r(entry,1));
-          }
+      ret.entryType = entry['entryType'];      
+      ret.clave = entry['cite'];
       
-      return {};
-      */
-    }
+      return ret;
+   
+   }
 };
 
 /*
@@ -2852,5 +2908,7 @@ INFORMACION DE LOS CAMPOS DE UN .bib: https://es.wikipedia.org/wiki/BibTeX
 PÁGINA ONLINE PARA PROBAR EXPRESIONES REGULARES: https://regex101.com/r/vNZNnz/4
 
 DOCUMENTACIÓN SOBRE BIBTEX: ftp://ftp.ctan.org/tex-archive/info/spanish/guia-bibtex/guia-bibtex.pdf
+
+Como publicar un ADD-ON (complemento): https://developers.google.com/apps-script/add-ons/publish
 
 */
