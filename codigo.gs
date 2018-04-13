@@ -4,8 +4,7 @@
 
 /*
 
-         FALTA PROBAR EL RESTO DE CASE NUEVOS (salvo el de misc) Y SI NO DA ERROR LOS NUEVOS CAMPOS DEL checkRequieredFields
-
+       
 */ 
 
 
@@ -135,113 +134,56 @@ function getText(){  //transforma todas las citas en una cadena
   
   return cad;
 }
-function prueba2(){
-  var doc = DocumentApp.getActiveDocument();
-  var body = doc.getBody();
-  
-  //var r = /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/gmi;
-  //var r = /\\cite/
-  var j = 0;
-  var replacement = "[" + j.toString() + "]";
-  //var toSearch = new RegExp(r2.source + r3.source + r5.source, (r2.global ? 'g' : '') + (r2.ignoreCase ? 'i' : '') + (r2.multiline ? 'm' : ''));
-  var toSearch = "\\\\cite{hola}";   // no borra la \ 
-  //var toSearch = "\\cite{hola}";   // error en la expresion regular ?¿?¿?¿?¿?
-  //var toSearch = /hola/; // no funciona ?¿?¿?¿?
-  /*var st = "\\cite{hola}";    
-  var toSearch = new RegExp(st);*/     // al igual que la anterior tampoco funciona ?¿?¿?¿?
-  body.editAsText().replaceText(toSearch, replacement);
-  
-  doc.saveAndClose();
-  return 0;
-}
-
-// INTENTO DE ELIMINAR EL PRIMER  \cite pero no funciona... inserta al principio del \cite en vez de borrarlo
-
-function prueba(){
-  var doc = DocumentApp.getActiveDocument();
-  var body = doc.getBody();
-  var text = body.getText();  
-  var length = text.length;
-  var cite = "";
-  
-  if(length > 6){
-    cite = text[0] + text[1] + text[2] + text[3] + text[4] + text[5];    
-  }
-  
-  
-  var encontrado = false;
-  var cont = 6;
-  var id = "";
-  var final = false;
-  var error = false;
-  var aux = 0;// se usa para comprobar errores
-  
-  var posCite = 0;
-  
-  while(!encontrado && cont < length){
-    if( cite == "\\cite{"){
-      posCite = cont - 6;
-      encontrado = true;      
-      while(!final && cont < length){
-        if(text[cont] == "}"){
-          final = true;
-          body.editAsText().insertText(posCite, "[0]");  // PRUEBA!! NO FUNCIONA :(
-        }else{
-          var c = text[cont];
-          id = id + c;
-          aux++;
-          cont++;
-          if(aux == 40 || cont >= length){
-            final = true;
-            error = true;
-          }
-        }
-      }
-    }else{
-      var c = text[cont];
-      cite = cite.slice(1);
-      cite = cite + c;
-      cont++;
-    }    
-  }
-  if(!encontrado){
-    error = true;
-  }
-  
-  doc.saveAndClose();
-  return 0;
-}
-
-
-//VERSION ANTIGUA de la funcion sustitute
-
-/*function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){
-  var bibtexDoc = [];
-  var lo = arrayCitesId.length;
-  var exito = false;
-  for(var i = 0; i < arrayCitesId.length; i++){
-    var idBibtex = arrayCitesId[i];
-    bibtexDoc[i] = JSON.stringify(bibtex_dict[idBibtex]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
-  }
-  
-  for(var j = 0; j < arrayCitesId.length; j++){  
-    var cite = arrayCitesId[j];
-    var replacement = "[" + j.toString() + "]";
-    var toSearch = "\cite{" + cite + "}";
-    body2.editAsText().replaceText(toSearch,replacement);
-
-  }
-  doc.saveAndClose();
-  exito = true;
-  return exito;
-}*/
-
 
 /*
 
 bibtexDoc[i] = JSON.stringify(bibtex_dict[clave]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
 
 */
+
+function prueba(){
+  var doc = DocumentApp.getActiveDocument();
+  var b = doc.getBody();
+  var style = {};
+  /*style[DocumentApp.Attribute.HORIZONTAL_ALIGNMENT] = DocumentApp.HorizontalAlignment.RIGHT;
+  style[DocumentApp.Attribute.FONT_FAMILY] = 'Calibri';*/
+  style[DocumentApp.Attribute.FONT_SIZE] = 10;
+  style[DocumentApp.Attribute.BOLD] = true;
+  
+  var style2 = {};
+  /*style2[DocumentApp.Attribute.HORIZONTAL_ALIGNMENT] = DocumentApp.HorizontalAlignment.RIGHT;
+  style2[DocumentApp.Attribute.FONT_FAMILY] = 'Calibri';*/
+  style2[DocumentApp.Attribute.FONT_SIZE] = 10;
+  style2[DocumentApp.Attribute.BOLD] = false;
+  style2[DocumentApp.Attribute.ITALIC] = true;
+
+  // Append a plain paragraph.
+  var par =  b.appendParagraph('[hola]         ');
+  var txt = par.appendText('A paragraph with custom style aaaaaaaaa aaaaaaaa aaaaaaa aaaaa aaaaaa aaaaaaa aaaaaaa aaaaaa aaaaaa  aaaaaaa aaaaaaaaa.\r');
+  
+  // Apply the custom style.
+  par.setAttributes(style);  
+  txt.setAttributes(style2); 
+  //var listItem = b.appendListItem('Item 1');
+  //var prueba = listItem.getListId();
+  
+  doc.saveAndClose();
+}
+
+function prueba1(){
+  var doc = DocumentApp.getActiveDocument();
+  var b = doc.getBody();
+
+  var listItem = b.appendListItem('Item');
+  var alig = listItem.getAlignment();
+  
+  /*var text = listItem.editAsText();
+  var string = text.getText();                    //NO FUNCIONA
+  text.replaceText("1", "[hola]");*/
+  
+  //var newElement = b.appendListItem("new Item");
+  doc.saveAndClose();
+}
 
 
 function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){ //remplaza todos los \cite{id} 
@@ -266,17 +208,22 @@ function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){ //remplaz
   //var references = apply_style(bibtex_dict['clave'], bibtex_dict, style, clavesEncontradas);
   var references = [];
   references[0] = {cite: "Krinke:2003:CSC", name: "[Krin03]", text: "Esto es un ejemplo de bibliografia para la clave Krinke:2003:CSC"};
- 
+  
   for(var j = 0; j < references.length; j++){
     var toSearch = "\\\\cite{" + references[j].cite + "}";
     var replacement = references[j].name;
-    if(body2.editAsText().replaceText(toSearch,replacement) === null){
+    /*if(body2.editAsText().replaceText(toSearch,replacement) === null){
       exito = false; //error al reemplazar en el documento
-    }
+    }*/
+    
+    body2.editAsText().replaceText(toSearch,replacement);
+   
   }
   
+  var exitoBiblio = setBiblio(references, body2);  
+  
   doc.saveAndClose();
-
+ 
   return exito;
 }
 
@@ -301,25 +248,33 @@ function checkErrors(bibtex){
 
 //PD: si \bibliography esta en medio de un párrafo de texto elimina dicho párrafo entero!!!
 
-function setBiblio(){
-  
-  var d = DocumentApp.getActiveDocument();
-  var b = d.getBody();
-  
+function setBiblio(references, b){
+    
   var rangeElem = b.findText("bibliography");
-  var elem = rangeElem.getElement();
-  var parent = elem.getParent();
-  var index = parent.getParent().getChildIndex(parent);
- 
-  var miParagraph = b.insertParagraph(index, "Bibliografía");
-  b.insertParagraph(index + 1, "Esto es la bibliografía...");
-  miParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  var exito;
   
-  //miParagraph.appendHorizontalRule(); añade una linea horizontal --> OPCIONAL
-  
-  elem.removeFromParent();
-
-  d.saveAndClose();
+  if(rangeElem === null){
+    exito = false;
+  }else{
+    exito = true;
+    var elem = rangeElem.getElement();
+    var parent = elem.getParent();
+    var index = parent.getParent().getChildIndex(parent);
+    
+    var miParagraph = b.insertParagraph(index, "Bibliografía");
+    
+    miParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    var parag;
+    for(var i = 0; i < references.length; i++){
+      parag = b.insertParagraph(index + 1, references[i].text);
+      
+    }
+    
+    //miParagraph.appendHorizontalRule(); añade una linea horizontal --> OPCIONAL
+    
+    elem.removeFromParent();
+  }
+  return exito;
 }
 
 
@@ -403,203 +358,6 @@ function doSomething(id) {
   var res = id;
   return res;
 }
-
-
-/**
- * Gets the text the user has selected. If there is no selection,
- * this function displays an error message.
- *
- * @return {Array.<string>} The selected text.
- */
-function getSelectedText(){
-  var selection = DocumentApp.getActiveDocument().getSelection();
-  if (selection) {
-    var text = [];
-    var elements = selection.getSelectedElements();
-    for (var i = 0; i < elements.length; i++) {
-      if (elements[i].isPartial()) {
-        var element = elements[i].getElement().asText();
-        var startIndex = elements[i].getStartOffset();
-        var endIndex = elements[i].getEndOffsetInclusive();
-
-        text.push(element.getText().substring(startIndex, endIndex + 1));
-      } else {
-        var element = elements[i].getElement();
-        // Only translate elements that can be edited as text; skip images and
-        // other non-text elements.
-        if (element.editAsText) {
-          var elementText = element.asText().getText();
-          // This check is necessary to exclude images, which return a blank
-          // text element.
-          if (elementText != '') {
-            text.push(elementText);
-          }
-        }
-      }
-    }
-    if (text.length == 0) {
-      throw 'Please select some text.';
-    }
-    return text;
-  } else {
-    throw 'Please select some text.';
-  }
-}
-
-/**
- * Gets the stored user preferences for the origin and destination languages,
- * if they exist.
- * This method is only used by the regular add-on, and is never called by
- * the mobile add-on version.
- *
- * @return {Object} The user's origin and destination language preferences, if
- *     they exist.
- */
-function getPreferences() {
-  var userProperties = PropertiesService.getUserProperties();
-  var languagePrefs = {
-    originLang: userProperties.getProperty('originLang'),
-    destLang: userProperties.getProperty('destLang')
-  };
-  return languagePrefs;
-}
-
-/**
- * Gets the user-selected text and translates it from the origin language to the
- * destination language. The languages are notated by their two-letter short
- * form. For example, English is 'en', and Spanish is 'es'. The origin language
- * may be specified as an empty string to indicate that Google Translate should
- * auto-detect the language.
- *
- * @param {string} origin The two-letter short form for the origin language.
- * @param {string} dest The two-letter short form for the destination language.
- * @param {boolean} savePrefs Whether to save the origin and destination
- *     language preferences.
- * @return {Object} Object containing the original text and the result of the
- *     translation.
- */
-function getTextAndTranslation(origin, dest, savePrefs) {
-  var result = {};
-  var text = getSelectedText();
-  result['text'] = text.join('\n');
-
-  if (savePrefs == true) {
-    var userProperties = PropertiesService.getUserProperties();
-    userProperties.setProperty('originLang', origin);
-    userProperties.setProperty('destLang', dest);
-  }
-
-  result['translation'] = translateText(result['text'], origin, dest);
-
-  return result;
-}
-
-/**
- * Replaces the text of the current selection with the provided text, or
- * inserts text at the current cursor location. (There will always be either
- * a selection or a cursor.) If multiple elements are selected, only inserts the
- * translated text in the first element that can contain text and removes the
- * other elements.
- *
- * @param {string} newText The text with which to replace the current selection.
- */
-function insertText(newText) {
-  var selection = DocumentApp.getActiveDocument().getSelection();
-  if (selection) {
-    var replaced = false;
-    var elements = selection.getSelectedElements();
-    if (elements.length == 1 &&
-        elements[0].getElement().getType() ==
-        DocumentApp.ElementType.INLINE_IMAGE) {
-      throw "Can't insert text into an image.";
-    }
-    for (var i = 0; i < elements.length; i++) {
-      if (elements[i].isPartial()) {
-        var element = elements[i].getElement().asText();
-        var startIndex = elements[i].getStartOffset();
-        var endIndex = elements[i].getEndOffsetInclusive();
-
-        var remainingText = element.getText().substring(endIndex + 1);
-        element.deleteText(startIndex, endIndex);
-        if (!replaced) {
-          element.insertText(startIndex, newText);
-          replaced = true;
-        } else {
-          // This block handles a selection that ends with a partial element. We
-          // want to copy this partial text to the previous element so we don't
-          // have a line-break before the last partial.
-          var parent = element.getParent();
-          parent.getPreviousSibling().asText().appendText(remainingText);
-          // We cannot remove the last paragraph of a doc. If this is the case,
-          // just remove the text within the last paragraph instead.
-          if (parent.getNextSibling()) {
-            parent.removeFromParent();
-          } else {
-            element.removeFromParent();
-          }
-        }
-      } else {
-        var element = elements[i].getElement();
-        if (!replaced && element.editAsText) {
-          // Only translate elements that can be edited as text, removing other
-          // elements.
-          element.clear();
-          element.asText().setText(newText);
-          replaced = true;
-        } else {
-          // We cannot remove the last paragraph of a doc. If this is the case,
-          // just clear the element.
-          if (element.getNextSibling()) {
-            element.removeFromParent();
-          } else {
-            element.clear();
-          }
-        }
-      }
-    }
-  } else {
-    var cursor = DocumentApp.getActiveDocument().getCursor();
-    var surroundingText = cursor.getSurroundingText().getText();
-    var surroundingTextOffset = cursor.getSurroundingTextOffset();
-
-    // If the cursor follows or preceds a non-space character, insert a space
-    // between the character and the translation. Otherwise, just insert the
-    // translation.
-    if (surroundingTextOffset > 0) {
-      if (surroundingText.charAt(surroundingTextOffset - 1) != ' ') {
-        newText = ' ' + newText;
-      }
-    }
-    if (surroundingTextOffset < surroundingText.length) {
-      if (surroundingText.charAt(surroundingTextOffset) != ' ') {
-        newText += ' ';
-      }
-    }
-    cursor.insertText(newText);
-  }
-}
-
-
-/**
- * Given text, translate it from the origin language to the destination
- * language. The languages are notated by their two-letter short form. For
- * example, English is 'en', and Spanish is 'es'. The origin language may be
- * specified as an empty string to indicate that Google Translate should
- * auto-detect the language.
- *
- * @param {string} text text to translate.
- * @param {string} origin The two-letter short form for the origin language.
- * @param {string} dest The two-letter short form for the destination language.
- * @return {string} The result of the translation, or the original text if
- *     origin and dest languages are the same.
- */
-function translateText(text, origin, dest) {
-  if (origin === dest) {
-    return text;
-  }
-  return LanguageApp.translate(text, origin, dest);
-}
-
 
 //========================================================
 
@@ -3024,7 +2782,6 @@ BibTex.prototype = {
         case "inproceedings":
           
           //Required fields: author, title, booktitle, year
-          //Optional fields: editor, volume or number, series, address, publisher, note, month, organization, pages.
           
           var exito = this.checkRequieredFields(entry, ret);
           ret.exito = exito;
@@ -3041,10 +2798,7 @@ BibTex.prototype = {
         
         case "proceedings":
           
-          //Required fields: title, year.
-          //Optional fields: editor, volume or number, series, address, publisher, note, month, organization.
-          
-          
+          //Required fields: title, year.      
           
           var exito = this.checkRequieredFields(entry, ret);
           ret.exito = exito;
