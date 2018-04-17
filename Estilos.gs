@@ -86,8 +86,8 @@ y utilizando aux[0]-> 'Ein' (habiendo eliminado primero el nombre).
 
 function styleAbbrv() {
   var doc = DocumentApp.openByUrl('https://docs.google.com/document/d/1jQtB6dfIypoI2sEPAyTcafBAaQ_VCaIfgFUX8zbYl7o/edit');  /*Sustituir por 
-                                              var doc = DocumentApp.openByUrl('URL'); 
-                                            para que utilizar un documento ya existente
+                                              var doc = DocumentApp.create('Nombre'); 
+                                            para crear un nuevo documento
                                             */
   var body = doc.getBody();
   
