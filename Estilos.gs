@@ -16,7 +16,7 @@ y utilizando aux[0]-> 'Ein' (habiendo eliminado primero el nombre).
 ->explode("D", string): divide el string dado en partes en función del delimitador D pasado como parámetro ==> apell=explode(" ", autor)
 */
 
-function apply_style(object, style){
+/*function apply_style(object, style){
 	var arrayFin = [];
 	var id, name, text;
 	var autor, primL;
@@ -81,4 +81,48 @@ function apply_style(object, style){
 			
 		/*default*/
 	}
+}*/
+
+
+function styleAbbrv() {
+  var doc = DocumentApp.openByUrl('https://docs.google.com/document/d/1jQtB6dfIypoI2sEPAyTcafBAaQ_VCaIfgFUX8zbYl7o/edit');  /*Sustituir por 
+                                              var doc = DocumentApp.openByUrl('URL'); 
+                                            para que utilizar un documento ya existente
+                                            */
+  var body = doc.getBody();
+  
+  var book = {
+            author : 'Albert Einstein',
+            title : 'Zur Elektrodynamik bewegter Korper. (German) [On the electrodynamics of moving bodies]',
+            journal : 'Annalen der Physik',
+            volume : '322',
+            number : '10',
+            pages : '891--921',
+            year : '1905'
+          };
+
+  
+  
+  /*Suponemos que ya hemos recopilado la infomacion del objeto*/
+ /* var Autor = 'Albert Einstein';
+  var title = 'Zur Elektrodynamik bewegter Korper. (German) [On the electrodynamics of moving bodies]';
+  var journal = 'Annalen der Physik';
+  var volume = '322';
+  var number = '10';
+  var pages ='891--921';
+  var year ='1905';*/
+  
+  var array1 = [{}];
+  var array2 = [{}];
+  
+
+  array1 = book.author.split(" ");
+  array2 = book.pages.split("--");
+  var primL = book.author.charAt(0);
+  var Fin = (primL+ "." +array1[1]+ "."+ book.title +". "+ book.journal +","+ book.volume + "(" + book.number + "):" + array2[0] + "-" + array2[1] + ", " + book.year + ".");
+
+  body.insertParagraph(0, Fin);
+
+  
 }
+
