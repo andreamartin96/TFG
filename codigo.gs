@@ -3,10 +3,145 @@
 
 
 /*
-
+       
+       VARIOS CITES EN UNO [id1, id2], ESTILO unsrt, Y QUE MUESTRE BIEN LAS REFERENCIAS (probar con clase TABLE)
        
 */ 
 
+
+/* ----------------------------------------------------------------------------
+
+                              Funciones de Pruebas
+
+   ---------------------------------------------------------------------------- */
+
+
+
+function prueba(){
+  var doc = DocumentApp.getActiveDocument();
+  var b = doc.getBody();
+  var style = {};
+  /*style[DocumentApp.Attribute.HORIZONTAL_ALIGNMENT] = DocumentApp.HorizontalAlignment.RIGHT;
+  style[DocumentApp.Attribute.FONT_FAMILY] = 'Calibri';*/
+  style[DocumentApp.Attribute.FONT_SIZE] = 10;
+  style[DocumentApp.Attribute.BOLD] = true;
+  
+  var style2 = {};
+  /*style2[DocumentApp.Attribute.HORIZONTAL_ALIGNMENT] = DocumentApp.HorizontalAlignment.RIGHT;
+  style2[DocumentApp.Attribute.FONT_FAMILY] = 'Calibri';*/
+  style2[DocumentApp.Attribute.FONT_SIZE] = 10;
+  style2[DocumentApp.Attribute.BOLD] = false;
+  style2[DocumentApp.Attribute.ITALIC] = true;
+
+  // Append a plain paragraph.
+  var par =  b.appendParagraph('[hola]         ');
+  var txt = par.appendText('A paragraph with custom style aaaaaaaaa aaaaaaaa aaaaaaa aaaaa aaaaaa aaaaaaa aaaaaaa aaaaaa aaaaaa  aaaaaaa aaaaaaaaa.\r');
+  
+  // Apply the custom style.
+  par.setAttributes(style);  
+  txt.setAttributes(style2); 
+  //var listItem = b.appendListItem('Item 1');
+  //var prueba = listItem.getListId();
+  
+  doc.saveAndClose();
+}
+
+function pruebaAddTableInDocument() {
+  
+  /* ---------------------------------------------
+  
+                      Estilos
+  
+     ---------------------------------------------  */
+  
+  var boldStyle = {};
+  boldStyle[DocumentApp.Attribute.FONT_SIZE] = 10;
+  boldStyle[DocumentApp.Attribute.BOLD] = true;
+  boldStyle[DocumentApp.Attribute.ITALIC] = false;
+  
+  var italicStyle = {};
+  italicStyle[DocumentApp.Attribute.FONT_SIZE] = 10;
+  italicStyle[DocumentApp.Attribute.BOLD] = false;
+  italicStyle[DocumentApp.Attribute.ITALIC] = true;
+  
+  var normalStyle = {};
+  normalStyle[DocumentApp.Attribute.FONT_SIZE] = 10;
+  normalStyle[DocumentApp.Attribute.BOLD] = false;
+  normalStyle[DocumentApp.Attribute.ITALIC] = false;
+  
+  /* ---------------------------------------------
+  
+             Construcción de la Tabla
+  
+     ---------------------------------------------  */  
+  
+  var doc = DocumentApp.getActiveDocument();
+  var body = doc.getBody();
+  
+  //Add a table in document
+  var table = body.appendTable();
+  table.setBorderWidth(0);
+  
+      
+  var myArray = [];
+  
+  myArray[0] = {};
+  myArray[0].author = "Andrea Martin";
+  myArray[0].year = "2004";
+  myArray[0].editorial = "Instanic";
+  
+  myArray[1] = {};
+  myArray[1].author = "Martin Martin";
+  myArray[1].editorial = "Estonia";
+  
+  myArray[2] = {};
+  myArray[2].author = "Antonio Fernandez";
+  myArray[2].year = "2017";
+  
+
+  for(var i=0; i<myArray.length; i++){
+    var tr = table.appendTableRow();
+
+    for(var j=0; j<2; j++){
+      
+      var td = tr.appendTableCell();
+      
+      //párrafo del la celda
+      var paraInCell = td.getChild(0).asParagraph();
+      
+      if(j == 0){
+        paraInCell.appendText("[" + j + "]");
+        paraInCell.setAttributes(boldStyle);
+      }else if(j == 1){
+        for(var key in myArray[i]){
+          if (key == 'author'){
+            var text1 = paraInCell.appendText(myArray[i].author + " ");
+            text1.setAttributes(boldStyle);
+          }else if (key == 'editorial'){
+            var text2 = paraInCell.appendText(myArray[i].editorial + " ");
+            text2.setAttributes(italicStyle);
+          }else if (key == 'year'){
+            var text3 = paraInCell.appendText(myArray[i].year + " ");
+            text3.setAttributes(normalStyle);
+          }
+        }
+      } 
+    }
+  }
+  
+  var cell = table.getCell(0, 0);
+  cell.setWidth(100);
+ 
+  //Salavamos y cerramos el documento
+  doc.saveAndClose();
+}
+
+
+/* ----------------------------------------------------------------------------
+
+                              Programa Principal
+
+   ---------------------------------------------------------------------------- */
 
 
 /**
@@ -60,229 +195,16 @@ function showSidebar() {
   DocumentApp.getUi().showSidebar(ui);
 }
 
+
+
 /**
 * @NotOnlyCurrentDoc
 */
 
 
-function getCites(){ //Obtiene todos los \cite encontrados en el documento actual
-  var body = DocumentApp.getActiveDocument().getBody();
-  var text = body.getText();
-  
-  /*NUEVA EXPRESION REGULAR HECHA. POSIBLE COMBINACIONES DE CLAVES QUE IDENTIFICA:
-  
-  \cite{hola:16}
-  \cite{hola}
-  \cite{Caballero2015104}
-  \cite{pedersen2012error}
-  \cite{Agha:1986:AMC}
-  \cite{ho-la}
-  \cite{h_ola}
-  \cite{Agha:al1986}
-  \cite{Aer1986:AMC}
-  
-  
-  EXPLICACION DE LA REGEX: 
-  
-  - .*  ---> cualquier carácter excepto 'line terminators' (\u , \w , ....)
-  
-  */
-  
-  var r = /\\cite{.*}/gmi;
-  var regex = new RegExp(r);
-  
-  var solutionArray = [];
-      
-  solutionArray = text.match(regex);
-  
-  
-  if(solutionArray){
-    
-  }else{
-    cad = "Error";
-    solutionArray[0] = cad;
-  }
-  
-  
-  return solutionArray;
-}
-
-function getId(solutionArray){  //obtiene todas las claves de los \cites encontrados en el documento actual
-  var newArray = new Array();
-  for(var i = 0; i < solutionArray.length; i++){
-      
-      var strL = solutionArray[i].length;
-      newArray[i] = solutionArray[i].slice(6, strL - 1);
-      
-    }
-  return newArray;
-}
-
-function getText(){  //transforma todas las citas en una cadena
-  var i = 0;
-  var auxArray = [];
-  var cad = ""; // cad contiene todos los \cite (usado para testear)
-  var length  = 0;
-  length = solutionArray.length;
-  
-  while(i < length){
-    auxArray[i] = solutionArray[i];
-    cad = cad + solutionArray[i] + "\n";
-    i++;
-    
-  }
-  
-  return cad;
-}
-
-/*
-
-bibtexDoc[i] = JSON.stringify(bibtex_dict[clave]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
-
-*/
-
-function prueba(){
-  var doc = DocumentApp.getActiveDocument();
-  var b = doc.getBody();
-  var style = {};
-  /*style[DocumentApp.Attribute.HORIZONTAL_ALIGNMENT] = DocumentApp.HorizontalAlignment.RIGHT;
-  style[DocumentApp.Attribute.FONT_FAMILY] = 'Calibri';*/
-  style[DocumentApp.Attribute.FONT_SIZE] = 10;
-  style[DocumentApp.Attribute.BOLD] = true;
-  
-  var style2 = {};
-  /*style2[DocumentApp.Attribute.HORIZONTAL_ALIGNMENT] = DocumentApp.HorizontalAlignment.RIGHT;
-  style2[DocumentApp.Attribute.FONT_FAMILY] = 'Calibri';*/
-  style2[DocumentApp.Attribute.FONT_SIZE] = 10;
-  style2[DocumentApp.Attribute.BOLD] = false;
-  style2[DocumentApp.Attribute.ITALIC] = true;
-
-  // Append a plain paragraph.
-  var par =  b.appendParagraph('[hola]         ');
-  var txt = par.appendText('A paragraph with custom style aaaaaaaaa aaaaaaaa aaaaaaa aaaaa aaaaaa aaaaaaa aaaaaaa aaaaaa aaaaaa  aaaaaaa aaaaaaaaa.\r');
-  
-  // Apply the custom style.
-  par.setAttributes(style);  
-  txt.setAttributes(style2); 
-  //var listItem = b.appendListItem('Item 1');
-  //var prueba = listItem.getListId();
-  
-  doc.saveAndClose();
-}
-
-function prueba1(){
-  var doc = DocumentApp.getActiveDocument();
-  var b = doc.getBody();
-
-  var listItem = b.appendListItem('Item');
-  var alig = listItem.getAlignment();
-  
-  /*var text = listItem.editAsText();
-  var string = text.getText();                    //NO FUNCIONA
-  text.replaceText("1", "[hola]");*/
-  
-  //var newElement = b.appendListItem("new Item");
-  doc.saveAndClose();
-}
-
-
-function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc){ //remplaza todos los \cite{id} 
- 
-  var lo = arrayCitesId.length;
-  var exito = true;
-  var i = 0;
-  var clavesEncontradas = []; //contendrá todas aquellas claves del documento actual que se encuentren en el .bib
-  var clavesNoEncontradas = []; //contendrá todas aquellas claves del documento actual que NO se encuentren en el .bib
-  while( i < arrayCitesId.length){  //para cada clave encuentro su informacion correspondiente del .bib
-    var clave = arrayCitesId[i];
-    if(bibtex_dict[clave] === undefined){ //si es undefined es que la clave no existe en el archivo .bib
-      exito = false;
-      clavesNoEncontradas[i] = clave;
-    }
-    else{
-      clavesEncontradas[i] = clave;
-    }
-    i++;
-  }
-  
-  //var references = apply_style(bibtex_dict['clave'], bibtex_dict, style, clavesEncontradas);
-  var references = [];
-  references[0] = {cite: "Krinke:2003:CSC", name: "[Krin03]", text: "Esto es un ejemplo de bibliografia para la clave Krinke:2003:CSC"};
-  
-  for(var j = 0; j < references.length; j++){
-    var toSearch = "\\\\cite{" + references[j].cite + "}";
-    var replacement = references[j].name;
-    /*if(body2.editAsText().replaceText(toSearch,replacement) === null){
-      exito = false; //error al reemplazar en el documento
-    }*/
-    
-    body2.editAsText().replaceText(toSearch,replacement);
-   
-  }
-  
-  var exitoBiblio = setBiblio(references, body2);  
-  
-  doc.saveAndClose();
- 
-  return exito;
-}
-
-//COMPRUEBA SI EN TODOS LOS DOCUMENTOS ENCONTRADOS HUBO EXITO EN SU CREACIÓN (NO FALTA NINGÚN CAMPO OBLIGATORIO)
-
-function checkErrors(bibtex){
-  var i = 0;
-  var errorEncontrado = false;
-  while(i<bibtex.data.length && !errorEncontrado){
-    var outobj = bibtex.google(i);
-    if(outobj['exito'] === false){
-      errorEncontrado = true;
-    }
-    
-    i++;
-  } 
-  return errorEncontrado;
-}
-
-
-// INSERTA UN PÁRRAFO EN EL LUGAR DONDE SE ENCUENTRA \bibliography
-
-//PD: si \bibliography esta en medio de un párrafo de texto elimina dicho párrafo entero!!!
-
-function setBiblio(references, b){
-    
-  var rangeElem = b.findText("bibliography");
-  var exito;
-  
-  if(rangeElem === null){
-    exito = false;
-  }else{
-    exito = true;
-    var elem = rangeElem.getElement();
-    var parent = elem.getParent();
-    var index = parent.getParent().getChildIndex(parent);
-    
-    var miParagraph = b.insertParagraph(index, "Bibliografía");
-    
-    miParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING2);
-    var parag;
-    for(var i = 0; i < references.length; i++){
-      parag = b.insertParagraph(index + 1, references[i].text);
-      
-    }
-    
-    //miParagraph.appendHorizontalRule(); añade una linea horizontal --> OPCIONAL
-    
-    elem.removeFromParent();
-  }
-  return exito;
-}
-
-
-
-
 //FUNCION PRINCIPAL QUE QUE ES LLAMA TRAS PULSAR EL BOTON DE "combinar documentos"
 
-function getBibtexAndDoc(e){
+function getBibtexAndDoc(e, estilo){
   //init the return vars
   
   e = "1nvTRkIZ0dbHamwv_H9ovn_uPdveB6CRo"; //utilizado para el proceso de testing
@@ -321,13 +243,342 @@ function getBibtexAndDoc(e){
     var doc = DocumentApp.openById(newIdDoc);
     var body = doc.getBody();
     var texto = body.getText();
-    exito = sustitute(arrayCites, arrayCitesId, body, bibtex_dict, doc);
-  }else{
-    //LANZAR EXCEPCION??¿?¿?¿?
+    exito = sustitute(arrayCites, arrayCitesId, body, bibtex_dict, doc, estilo);
   }
   
   return exito;
 }
+
+function getCites(){ //Obtiene todos los \cite encontrados en el documento actual
+  var body = DocumentApp.getActiveDocument().getBody();
+  var text = body.getText();
+  
+  /*NUEVA EXPRESION REGULAR HECHA. POSIBLE COMBINACIONES DE CLAVES QUE IDENTIFICA:
+  
+  \cite{hola:16}
+  \cite{hola}
+  \cite{Caballero2015104}
+  \cite{pedersen2012error}
+  \cite{Agha:1986:AMC}
+  \cite{ho-la}
+  \cite{h_ola}
+  \cite{Agha:al1986}
+  \cite{Aer1986:AMC}
+  
+  
+  EXPLICACION DE LA REGEX: 
+  
+  - .*  ---> cualquier carácter excepto 'line terminators' (\u , \w , ....)
+  
+  */
+  
+  
+  // NO FUNCIONA 
+  var r = /\\cite{.*?}/gmi;
+  
+  //var r = /\\cite{(\w{1,40}:\d{1,40}|\w{1,40}|\w{1,40}\d{1,40}|\w{1,40}\d{1,40}\w{1,40}|\w{1,40}:\d{1,40}:\w{1,40}|\w{1,40}-\w{1,40}|\w{1,40}_\w{1,40}|\w{1,40}\d{1,40}:\w{1,40}|\w{1,40}:\w{1,40}\d{1,40})}/gmi;
+  //var regex = new RegExp(r);
+  
+  var solutionArray = [];
+      
+  solutionArray = text.match(r);
+   
+  return solutionArray;
+}
+
+function getId(solutionArray){  //obtiene todas las claves de los \cites encontrados en el documento actual
+  var newArray = new Array();
+  for(var i = 0; i < solutionArray.length; i++){
+      
+      var strL = solutionArray[i].length;
+      newArray[i] = solutionArray[i].slice(6, strL - 1);
+      
+    }
+  return newArray;
+}
+
+function getText(){  //transforma todas las citas en una cadena
+  var i = 0;
+  var auxArray = [];
+  var cad = ""; // cad contiene todos los \cite (usado para testear)
+  var length  = 0;
+  length = solutionArray.length;
+  
+  while(i < length){
+    auxArray[i] = solutionArray[i];
+    cad = cad + solutionArray[i] + "\n";
+    i++;
+    
+  }
+  
+  return cad;
+}
+
+/*
+
+bibtexDoc[i] = JSON.stringify(bibtex_dict[clave]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
+
+*/
+
+
+function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc, estilo){ //remplaza todos los \cite{id} 
+ 
+  var lo = arrayCitesId.length;
+  var exito = true;
+  var i = 0;
+  var clavesEncontradas = []; //contendrá todas aquellas claves del documento actual que se encuentren en el .bib
+  var clavesNoEncontradas = []; //contendrá todas aquellas claves del documento actual que NO se encuentren en el .bib
+  var listaTuplas = [];
+  while( i < arrayCitesId.length){  //para cada clave encuentro su informacion correspondiente del .bib
+    var clave = arrayCitesId[i];
+    if(bibtex_dict[clave] === undefined){ //si es undefined es que la clave no existe en el archivo .bib
+      clavesNoEncontradas[i] = clave;
+    }
+    else{
+      clavesEncontradas[i] = clave;
+      listaTuplas[i] = {};
+      listaTuplas[i].cite = clave;
+      listaTuplas[i].info = bibtex_dict[clave];
+    }
+    i++;
+  }
+  
+  /*
+  
+  REEMPLAZAR LAS CLAVES NO ENCONTRADAS POR [??]
+  
+  */
+  
+  for(var k = 0; k < clavesNoEncontradas.length; k++){
+    var toSearch1 = "\\\\cite{" + clavesNoEncontradas[k] + "}";
+    var replacement1 = "[??]";    
+    body2.editAsText().replaceText(toSearch1,replacement1);
+  }
+ 
+  /*
+  
+  REEMPLAZAR LAS CLAVES ENCONTRADAS POR [references.name] QUE CONTIENE LA INFORMACION DE CADA CITE
+  
+  */
+    
+  //var referencesPrueba = constructInfo(listaTuplas, estilo);
+  //var references = [];
+  //references[0] = {cite: "Krinke:2003:CSC", name: "[Krin03]", text: "Krinke (2003), Handbook of mathematical functions with formulas, graphs, and mathematical tables. New York: Dover."};
+  
+  
+  for(var j = 0; j < clavesEncontradas.length; j++){
+    var toSearch = "\\\\cite{" + clavesEncontradas[j] + "}";
+    var replacement = "[" + j + "]";
+    
+    body2.editAsText().replaceText(toSearch,replacement);
+   
+  }
+  
+  /*
+  
+  CREAMOS LA SECCION DE LA BIBLIOGRAFÍA
+  
+  */
+  
+  var exitoBiblio = setBiblio(body2, clavesNoEncontradas, listaTuplas, estilo);  
+  
+  doc.saveAndClose();
+ 
+  return exito;
+}
+
+//COMPRUEBA SI EN TODOS LOS DOCUMENTOS ENCONTRADOS HUBO EXITO EN SU CREACIÓN (NO FALTA NINGÚN CAMPO OBLIGATORIO)
+
+function checkErrors(bibtex){
+  var i = 0;
+  var errorEncontrado = false;
+  while(i<bibtex.data.length && !errorEncontrado){
+    var outobj = bibtex.google(i);
+    if(outobj['exito'] === false){
+      errorEncontrado = true;
+    }
+    
+    i++;
+  } 
+  return errorEncontrado;
+}
+
+
+// INSERTA UN PÁRRAFO EN EL LUGAR DONDE SE ENCUENTRA \bibliography
+
+//PD: si \bibliography esta en medio de un párrafo de texto elimina dicho párrafo entero!!!
+
+function setBiblio(body, clavesNoEncontradas, listaTuplas, estilo){
+    
+  var rangeElem = body.findText("bibliography");
+  var exito;
+  
+  if(rangeElem === null){
+    exito = false;
+  }else{
+    exito = true;
+    var elem = rangeElem.getElement();
+    var parent = elem.getParent();
+    var index = parent.getParent().getChildIndex(parent);
+    
+    var style = {};
+    style[DocumentApp.Attribute.FONT_SIZE] = 10;
+    style[DocumentApp.Attribute.BOLD] = true;
+    
+    var style2 = {};
+    style2[DocumentApp.Attribute.FONT_SIZE] = 10;
+    style2[DocumentApp.Attribute.BOLD] = false;
+    style2[DocumentApp.Attribute.ITALIC] = true;
+    
+    var miParagraph = body.insertParagraph(index, "References");
+    index++;
+    miParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    
+    constructInfo(listaTuplas, estilo, body, index, clavesNoEncontradas);
+    
+    /*for(var i = 0; i < references.length; i++){
+      
+      
+      
+      var parag = body.insertParagraph(index, references[i].name + "       ");      
+      var txt = parag.appendText(references[i].text);
+      index++;
+      
+      // Apply the custom style.
+      parag.setAttributes(style);  
+      txt.setAttributes(style2);
+      
+      var parag = body.insertParagraph(index,""); //párrafo en blanco
+      index++;
+    }*/
+        
+    elem.removeFromParent();
+  }
+  return exito;
+}
+
+function constructInfo(listaTuplas, estilo, body, index, clavesNoEncontradas){
+  
+  /* ---------------------------------------------
+  
+                      Estilos
+  
+     ---------------------------------------------  */
+  
+  var boldStyle = {};
+  boldStyle[DocumentApp.Attribute.FONT_SIZE] = 10;
+  boldStyle[DocumentApp.Attribute.BOLD] = true;
+  boldStyle[DocumentApp.Attribute.ITALIC] = false;
+  
+  var italicStyle = {};
+  italicStyle[DocumentApp.Attribute.FONT_SIZE] = 10;
+  italicStyle[DocumentApp.Attribute.BOLD] = false;
+  italicStyle[DocumentApp.Attribute.ITALIC] = true;
+  
+  var normalStyle = {};
+  normalStyle[DocumentApp.Attribute.FONT_SIZE] = 10;
+  normalStyle[DocumentApp.Attribute.BOLD] = false;
+  normalStyle[DocumentApp.Attribute.ITALIC] = false;
+  
+  /* ---------------------------------------------
+  
+             Construcción de la Tabla
+  
+     ---------------------------------------------  */ 
+  
+  var table = body.insertTable(index);
+  table.setBorderWidth(0);
+  
+  estilo = "unsrt";
+  switch(estilo){
+    case "abbrv":
+      
+    break;
+    case "acm":
+      
+    break;
+    
+    case "alpha":
+      
+    break;
+    case "plain":
+      
+    break;
+    case "apalike":
+      
+    break;
+    case "unsrt":
+      for(var i = 0; i < listaTuplas.length; i++){
+        for (var key in listaTuplas[i].info) {
+          
+        }
+      }
+      
+      for(var i = 0; i <= listaTuplas.length; i++){
+        var tr = table.appendTableRow();
+        
+        for(var j=0; j<2; j++){
+          
+          var td = tr.appendTableCell();
+          var paraInCell = td.getChild(0).asParagraph();   //párrafo del la celda
+          if( i < listaTuplas.length){
+            if(j == 0){   //  ------------------------------------>  [id]
+              paraInCell.appendText("[" + i + "]");
+              paraInCell.setAttributes(boldStyle);
+            }else if(j == 1){  //  ------------------------------->  info
+              for(var key in listaTuplas[i].info){  //para cada tupla
+                if (key == 'title'){
+                  var text1 = paraInCell.appendText(listaTuplas[i].info[key] + ", ");
+                  text1.setAttributes(italicStyle);
+                }else if(key == 'authors'){
+                  var text2 = paraInCell.appendText("AQUÍ VA EL AUTOR ");
+                  text2.setAttributes(boldStyle);
+                }else if(key == 'entryType' || key == 'clave' || key == 'exito'){
+                  //las ignoro
+                }else{
+                  var text3 = paraInCell.appendText(listaTuplas[i].info[key] + ", ");
+                  text3.setAttributes(normalStyle);
+                }
+              }
+            }
+          }else{
+            if(j == 0){
+              paraInCell.appendText("[??]");
+              paraInCell.setAttributes(boldStyle);
+            }else if(j == 1){ 
+              var text1 = paraInCell.appendText("Claves no encontradas");
+              text1.setAttributes(italicStyle);
+            }
+          }
+        }
+      }
+    break;
+  }
+  
+  //Informo al usuario si hubo claves que no se encontraron en el .bib 
+    
+  /*if(clavesNoEncontradas.length > 0){
+    tr = table.appendTableRow();
+    var td = tr.appendTableCell();
+    var paraInCell = td.getChild(0).asParagraph();
+    
+    for(var j=0; j<2; j++){
+      var td = tr.appendTableCell();
+      var paraInCell = td.getChild(0).asParagraph();   //párrafo del la celda
+      if(j == 0){  
+        paraInCell.appendText("[??]");
+        paraInCell.setAttributes(boldStyle);
+      }else if(j == 1){         
+        var text1 = paraInCell.appendText("Claves no encontradas");
+        text1.setAttributes(italicStyle);
+      } 
+    }
+  }*/
+  
+  var cell = table.getCell(0, 0);
+  cell.setWidth(100);
+}
+
 
 function getFiles(e) {
   var data = {};
