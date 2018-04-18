@@ -121,7 +121,12 @@ function styleAbbrv() {
   var primL = book.author.charAt(0);
   var Fin = (primL+ "." +array1[1]+ "."+ book.title +". "+ book.journal +","+ book.volume + "(" + book.number + "):" + array2[0] + "-" + array2[1] + ", " + book.year + ".");
 
-  body.insertParagraph(0, Fin);
+  var objFin = {}; // objFin es el objeto que contiene todo lo que se devuelve
+  objFin["id"] = "1";
+  objFin["name"] = "1";
+  objFin["text"] = Fin;
+
+  body.insertParagraph(0,objFin.text); //Para probar que se inserta correctamente.
 
   
 }
