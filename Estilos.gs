@@ -147,14 +147,19 @@ function styleAbbrv() {
   array2 = book.pages.split("--");
   var primL = book.author.charAt(0);
   var Fin = (primL+ "." +array1[1]+ "."+ book.title +". "+ book.journal +","+ book.volume + "(" + book.number + "):" + array2[0] + "-" + array2[1] + ", " + book.year + ".");
-
+  var cite = ("["+1+"]");	
+	
   var objFin = {}; // objFin es el objeto que contiene todo lo que se devuelve
   objFin["id"] = "1";
-  objFin["name"] = "1";
+  objFin["name"] = cite;
   objFin["text"] = Fin;
 
-  body.insertParagraph(0,objFin.text); //Para probar que se inserta correctamente.
 
+  //Comprobaciones	
+  body.insertParagraph(0,objFin.id); 
+  body.insertParagraph(1,objFin.name);
+  body.insertParagraph(2,objFin.text);
+	
   
 }
 
