@@ -4,7 +4,7 @@
 
 /*
        
-       VARIOS CITES EN UNO [id1, id2], ESTILO unsrt, Y QUE MUESTRE BIEN LAS REFERENCIAS (probar con clase TABLE)
+       TERMINAR LA FUNCION finishInfo() Y CAPTURAR EL ERROR SI NO EXISTE \bibliography
        
 */ 
 
@@ -46,7 +46,7 @@
  */
 function onOpen(e) {
   DocumentApp.getUi().createAddonMenu()
-      .addItem('Start', 'showSidebar')
+      .addItem('Comenzar', 'showSidebar')
       .addToUi();
 }
 
@@ -71,7 +71,7 @@ function onInstall(e) {
  * the mobile add-on version.
  */
 function showSidebar() {
-  var ui = HtmlService.createHtmlOutputFromFile('Sidebar2')
+  var ui = HtmlService.createHtmlOutputFromFile('Sidebar')
       .setTitle('Combinación de Documentos');
   DocumentApp.getUi().showSidebar(ui);
 }
@@ -88,7 +88,7 @@ function showSidebar() {
 function getBibtexAndDoc(e, estilo){
   //init the return vars
   
-  e = "1nvTRkIZ0dbHamwv_H9ovn_uPdveB6CRo"; //utilizado para el proceso de testing
+  //e = "1nvTRkIZ0dbHamwv_H9ovn_uPdveB6CRo"; //utilizado para el proceso de testing
   var bibtex_dict = [];
 
   var bibtex_doc = DriveApp.getFileById(e);
@@ -103,6 +103,9 @@ function getBibtexAndDoc(e, estilo){
   var errorEncontrado = checkErrors(bibtex); // comprueba si hubo exito en todos los documentos encontrados
   var exito = false;
   if(!errorEncontrado){
+    var biblioExist = checkBibliography();
+  }
+  if(!errorEncontrado && biblioExist){
     
     //Crea un diccionario con todos los documentos
     for(var i=0; i<bibtex.data.length; ++i){
@@ -184,6 +187,37 @@ function getText(){  //transforma todas las citas en una cadena
   return cad;
 }
 
+
+//COMPRUEBA SI EN TODOS LOS DOCUMENTOS ENCONTRADOS HUBO EXITO EN SU CREACIÓN (NO FALTA NINGÚN CAMPO OBLIGATORIO)
+
+function checkErrors(bibtex){
+  var i = 0;
+  var errorEncontrado = false;
+  while(i<bibtex.data.length && !errorEncontrado){
+    var outobj = bibtex.google(i);
+    if(outobj['exito'] === false){
+      errorEncontrado = true;
+    }
+    
+    i++;
+  } 
+  return errorEncontrado;
+}
+
+function checkBibliography(){
+  var body = DocumentApp.getActiveDocument().getBody();
+  var rangeElem = body.findText("\\\\bibliography");
+  var exito;
+  
+  if(rangeElem === null){
+    exito = false;
+  }else{
+    exito = true;
+  }
+  
+  return exito;
+}
+
 /*
 
 bibtexDoc[i] = JSON.stringify(bibtex_dict[clave]);  //transforma a el documento .bib a texto apartir de las citas encontradas en el documento.
@@ -232,22 +266,6 @@ function sustitute(arrayCites, arrayCitesId, body2, bibtex_dict, doc, estilo){ /
   return exito;
 }
 
-//COMPRUEBA SI EN TODOS LOS DOCUMENTOS ENCONTRADOS HUBO EXITO EN SU CREACIÓN (NO FALTA NINGÚN CAMPO OBLIGATORIO)
-
-function checkErrors(bibtex){
-  var i = 0;
-  var errorEncontrado = false;
-  while(i<bibtex.data.length && !errorEncontrado){
-    var outobj = bibtex.google(i);
-    if(outobj['exito'] === false){
-      errorEncontrado = true;
-    }
-    
-    i++;
-  } 
-  return errorEncontrado;
-}
-
 
 // INSERTA UN PÁRRAFO EN EL LUGAR DONDE SE ENCUENTRA \bibliography
 
@@ -255,7 +273,7 @@ function checkErrors(bibtex){
 
 function setBiblio(body, clavesNoEncontradas, listaTuplas, estilo, clavesEncontradas, arrayCitesId){
     
-  var rangeElem = body.findText("bibliography");
+  var rangeElem = body.findText("\\\\bibliography");
   var exito;
   
   if(rangeElem === null){
@@ -270,14 +288,10 @@ function setBiblio(body, clavesNoEncontradas, listaTuplas, estilo, clavesEncontr
     style[DocumentApp.Attribute.FONT_SIZE] = 10;
     style[DocumentApp.Attribute.BOLD] = true;
     
-    var style2 = {};
-    style2[DocumentApp.Attribute.FONT_SIZE] = 10;
-    style2[DocumentApp.Attribute.BOLD] = false;
-    style2[DocumentApp.Attribute.ITALIC] = true;
-    
     var miParagraph = body.insertParagraph(index, "References");
+    
     index++;
-    miParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    miParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING1);
     
     var arrayCitesInserted = constructInfo(listaTuplas, estilo, body, index, clavesNoEncontradas);
     
@@ -367,16 +381,19 @@ function constructInfo(listaTuplas, estilo, body, index, clavesNoEncontradas){
   boldStyle[DocumentApp.Attribute.FONT_SIZE] = 10;
   boldStyle[DocumentApp.Attribute.BOLD] = true;
   boldStyle[DocumentApp.Attribute.ITALIC] = false;
+  boldStyle[DocumentApp.Attribute.FONT_FAMILY] = "Times New Roman";
   
   var italicStyle = {};
   italicStyle[DocumentApp.Attribute.FONT_SIZE] = 10;
   italicStyle[DocumentApp.Attribute.BOLD] = false;
   italicStyle[DocumentApp.Attribute.ITALIC] = true;
+  italicStyle[DocumentApp.Attribute.FONT_FAMILY] = "Times New Roman";
   
   var normalStyle = {};
   normalStyle[DocumentApp.Attribute.FONT_SIZE] = 10;
   normalStyle[DocumentApp.Attribute.BOLD] = false;
   normalStyle[DocumentApp.Attribute.ITALIC] = false;
+  normalStyle[DocumentApp.Attribute.FONT_FAMILY] = "Times New Roman";
   
   
   /* ----------------- Construcción de la Tabla ---------------------- */ 
@@ -447,7 +464,7 @@ function constructInfo(listaTuplas, estilo, body, index, clavesNoEncontradas){
               var finalObj = constructObj(listaTuplas[i].info);
               
               for(var key in finalObj){
-                if((key == "title" && listaTuplas[i].info.entryType != "article") || (key == "journal")){
+                if((key == "title" && listaTuplas[i].info.entryType != "article") || (key == "journal") || (key == "booktitle")){
                   var text = paraInCell.appendText(finalObj[key]);
                   text.setAttributes(italicStyle);
                 }else{
@@ -524,7 +541,7 @@ function constructName(pos,tupla,estilo){
           }
         }else if(tupla.info['editor'] !== undefined){
           if(tupla.info['editor'].length > 1){
-            for(var i = 0; i < tupla.info['editor'].length; i++){
+            for(var i = 0; i < tupla.info['editor'].length; i++){  //NO SOPORTADO AUN ESTE ESTILO
               var author = tupla.info['editor'][i];
               var firstChar = author['last'].substr(0, 1);
               name = name + firstChar;
@@ -579,59 +596,67 @@ function constructObj(info){
       Required fields: author or editor, title, publisher, year.
       Optional fields: volume or number, series, address, edition, month, note.
       */
-      var obj = {authors: "", editor: "", title: "", volume: "", number: "", series: "", publisher: "", address: "", edition: "", month: "", year: "", note: ""};
-    break;
+      var obj = {authors: "", editor: "", title: "", volume: "", number: "", series: "", publisher: "", address: "", edition: "", month: "", year: "", note: "", entryType: "book"};
+         
+      break;
     case 'article':
       /*
       Required fields: author, title, journal, year.
       Optional fields: volume, number, pages, month, note.
       */
       
-      var obj = {authors: "", title: "", journal: "", volume: "", number: "", pages: "", month: "", year: "", note: ""};
+      var obj = {authors: "", title: "", journal: "", volume: "", number: "", pages: "", month: "", year: "", note: "", entryType: "article"};
+           
     break;
     case 'mastersthesis':
       /*
       Required fields: author, title, school, year.
       Optional fields: type, address, month, note.
       */
-      var obj = {authors: "", title: "", journal: "", volume: "", number: "", pages: "", month: "", year: "", note: ""};
+      var obj = {authors: "", title: "", type: "", school: "", address: "", month: "", year: "", note: "", entryType: "mastersthesis"};
+       
     break;
     case 'misc':
       /*
       Optional fields: author, title, howpublished, month, year, note.
       */
-      var obj = {authors: "", title: "", journal: "", volume: "", number: "", pages: "", month: "", year: "", note: ""};
+      var obj = {authors: "", title: "", howpublished: "", month: "", year: "", note: "", entryType: "misc"};
+      
     break;
     case 'phdthesis':
       /*
       Required fields: author, title, school, year.
       Optional fields: type, address, month, note.
       */
-      var obj = {authors: "", title: "", journal: "", volume: "", number: "", pages: "", month: "", year: "", note: ""};
+      var obj = {authors: "", title: "", type: "", school: "", address: "", month: "", year: "", note: "", entryType: "phdthesis"};
+            
     break;
     case 'techreport':
       /*
       Required fields: author, title, institution, year.
       Optional fields: type, number, address, month, note.
       */
-      var obj = {authors: "", title: "", journal: "", volume: "", number: "", pages: "", month: "", year: "", note: ""};
+      var obj = {authors: "", title: "", type: "", number: "", institution: "", address: "", month: "", year: "", note: "", entryType: "techreport"};
+         
     break;
     case 'inproceedings':
       /*
       Required fields: author, title, booktitle, year.
       Optional fields: editor, volume or number, series, pages, address, month, organization, publisher, note.
       */
-      var obj = {authors: "", title: "", journal: "", volume: "", number: "", pages: "", month: "", year: "", note: ""};
+      var obj = {authors: "", title: "", booktitle: "", editor: "", volume: "", series: "", pages: "", address: "", month: "", year: "", organization: "", publisher: "", note: "", entryType: "inproceedings"}
+      
     break;
     case 'proceedings':
       /*
       Required fields: title, year.
       Optional fields: editor, volume or number, series, address, publisher, note, month, organization.
       */
-      var obj = {authors: "", title: "", journal: "", volume: "", number: "", pages: "", month: "", year: "", note: ""};
+      var obj = {editor: "", title: "", volume: "", series: "", address: "", month: "", year: "", organization: "", publisher: "", note: "", entryType: "proceedings"};
+      
     break;
   }
- 
+  
   for(var key in info){
     if(key == 'authors'){          
       var authors = info[key];
@@ -662,8 +687,139 @@ function constructObj(info){
       obj[key] = info[key];
     }  
   } 
-  var finalObj = addSeparators(obj);
+  
+  var nextObj = finishInfo(obj);
+  
+  var finalObj = addSeparators(nextObj);
   return finalObj;
+}
+
+function finishInfo(obj){
+  switch(obj.entryType){
+    case "book":
+      
+      if(obj.volume != "" && obj.series != ""){ //si existen los dos: volume x of z
+        obj.volume = "volume " + obj.volume + " of " + obj.series;
+        delete obj['series'];
+      }else if(obj.volume != "" && obj.series == ""){ //si existe volume pero no series: volume x
+        obj.volume = "volume " + obj.volume;
+      }else if(obj.volume == "" && obj.series != ""){ //si existe series pero no volume: series z
+        obj.series = "series " + obj.series;
+      }
+      
+      if(obj.edition != ""){
+        obj.edition = obj.edition + " edition";
+      }
+      
+      if(obj.editor != ""){
+        obj.editor = obj.editor + ", editor";
+      }
+      
+    break;
+    case "mastersthesis":
+      
+      if(obj.type == ""){
+        obj.type = "Master´s thesis";
+      }
+      
+    break;
+    case "phdthesis":
+      
+      if(obj.type == ""){
+        obj.type = "PhD thesis";
+      }
+      
+    break;
+    case "techreport":
+      
+      if(obj.type == ""){
+        if(obj.number == ""){
+          obj.type = "Technical Report";
+        }else{
+          obj.type = "Technical Report " + obj.number;
+          delete obj['number'];
+        }
+      }
+      
+    break;
+    case "proceedings":
+      
+      if(obj.volume != "" && obj.series != ""){ //si existen los dos: volume x of z
+        obj.volume = "volume " + obj.volume + " of " + obj.series;
+        delete obj['series'];
+      }else if(obj.volume != "" && obj.series == ""){ //si existe volume pero no series: volume x
+        obj.volume = "volume " + obj.volume;
+      }else if(obj.volume == "" && obj.series != ""){ //si existe series pero no volume: series z
+        obj.series = "series " + obj.series;
+      }
+      
+      if(obj.editor != ""){
+        obj.editor = obj.editor + ", editor";
+      }
+      
+    break;
+    case "inproceedings":
+      
+      if(obj.volume != "" && obj.series != ""){ //si existen los dos: volume x of z
+        obj.volume = "volume " + obj.volume + " of " + obj.series;
+        delete obj['series'];
+      }else if(obj.volume != "" && obj.series == ""){ //si existe volume pero no series: volume x
+        obj.volume = "volume " + obj.volume;
+      }else if(obj.volume == "" && obj.series != ""){ //si existe series pero no volume: series z
+        obj.series = "series " + obj.series;
+      }
+      
+      if(obj.editor != ""){
+        obj.editor = obj.editor + ", editor";
+      }
+      
+      if(obj.pages != ""){ //pages: pages w
+          obj.pages = "pages " + obj.pages;
+      }
+      
+    break;
+    case "article":
+      
+      if(obj.volume != "" && obj.number != "" && obj.pages != ""){ //si existen los tres: x(y):z
+        obj.volume = obj.volume + "(" + obj.number + "):" + obj.pages;
+        delete obj['number'];
+        delete obj['pages'];
+      }else if(obj.volume != "" && obj.number == "" && obj.pages == ""){ //si solo existe volume: volume x  
+        obj.volume = "volume " + obj.volume;
+      }else if(obj.volume == "" && obj.number == "" && obj.pages != ""){ //si solo existe pages: Pages z
+        obj.pages = "pages " + obj.pages;
+      }else if(obj.volume == "" && obj.number != "" && obj.pages == ""){ //si solo existe number: (y)
+        obj.number = "(" + obj.number + ")";
+      }else{  //si existen al menos dos
+        
+        if(obj.number != ""){ // number: (y)
+          obj.number = "(" + obj.number + ")";
+        }
+        
+        if(obj.pages != ""){ //pages: :z
+          obj.pages = ":" + obj.pages;
+        }
+        
+        if(obj.volume != ""){  //si existe volume añado el otro que exista para que no me ponga una coma por medio
+          if(obj.pages != ""){ //si pages
+            obj.volume = obj.volume + obj.pages;
+            delete obj['pages'];
+          }else if(obj.number != ""){ //si number
+            obj.volume = obj.volume + obj.number;
+            delete obj['number'];
+          }
+        }else{            //si NO existe volume combino los otros dos para que no me ponga una coma por medio
+          if(obj.pages != "" && obj.number != ""){ 
+            obj.number = obj.number + obj.pages;
+            delete obj['pages'];
+          }
+        }
+      }
+      
+    break;
+    
+  }
+  return obj;
 }
 
 function addSeparators(obj){
@@ -673,36 +829,134 @@ function addSeparators(obj){
     }
   }
   
+  delete obj["entryType"];
+  
   var size = Object.keys(obj).length;
   var cont = 1;
   
   for(key in obj){
-    if(key == "number"){
-      obj[key] = "(" + obj[key] + ")";
-    }
     
-    if(key == "pages"){
-      obj[key] = ":" + obj[key];
-    }
-    
-    if(key == "authors" || key == "title"){
+    if((key == "authors") || (key == "title") || (key == "year")){
       obj[key] = obj[key] + ". "; //autores y titulos separados por un punto
       cont++;
     }else if(cont == size){       
       obj[key] = obj[key] + ".";  //es la ultima propiedad -> añadir el punto final
-    }else if((key == "volume") || (key == "number")){
-      obj[key] = obj[key];  //el volumen va seguido del número y páginas
-      cont++;
     }else if(key == "month"){
-      obj[key] = obj[key] + " ";  //el volumen va seguido del año separado por un espacio
+      obj[key] = obj[key] + " ";  //el mes va seguido del año separado por un espacio
       cont++;
     }else{
       obj[key] = obj[key] + ", "; //el resto separados por una coma
       cont++;
     }
+    
+    obj[key] = checkTildes(obj[key]);
+    obj[key] = checkSimbols(obj[key]);
+    
   }
   
   return obj;
+}
+
+function checkTildes(st){
+  var index = 0;
+  
+  while(index >= 0){
+    //comprobar si existen posible acentos              
+    if(st.indexOf("{\\'a}") >= 0){          
+      st = st.replace("{\\'a}", "á");
+    }else if (st.indexOf("\'{a}") >= 0){
+      st = st.replace("\\'{a}", "á");
+    }else if (st.indexOf("\'a") >= 0){
+      st = st.replace("\\'a", "á");
+    }else if (st.indexOf("\\'{\\a}") >= 0){
+      st = st.replace("\\'{\\a}", "á");
+    }else if (st.indexOf("\`a") >= 0){
+      st = st.replace("\\`a", "à");
+    }else if(st.indexOf("{\\'e}") >= 0){
+      st = st.replace("{\\'e}", "é");
+    }else if (st.indexOf("\'{e}") >= 0){
+      st = st.replace("\\'{e}", "é");
+    }else if (st.indexOf("\'e") >= 0){
+      st = st.replace("\\'e", "é");
+    }else if (st.indexOf("\\'{\\e}") >= 0){
+      st = st.replace("\\'{\\e}", "é");
+    }else if (st.indexOf("\`e") >= 0){
+      st = st.replace("\\`e", "è");
+    }else if (st.indexOf("{\\'i}") >= 0){
+      st = st.replace("{\\'i}", "í");
+    }else if (st.indexOf("\'{i}") >= 0){
+      st = st.replace("\\'{i}", "í");
+    }else if (st.indexOf("\'i") >= 0){
+      st = st.replace("\\'i", "í");
+    }else if (st.indexOf("\\'{\\i}") >= 0){
+      st = st.replace("\\'{\\i}", "í");
+    }else if (st.indexOf("\`i") >= 0){
+      st = st.replace("\\`i", "ì");
+    }else if (st.indexOf("{\\'o}") >= 0){
+      st = st.replace("{\\'o}", "ó");
+    }else if (st.indexOf("\'{o}") >= 0){
+      st = st.replace("\\'{o}", "ó");
+    }else if (st.indexOf("\'o") >= 0){
+      st = st.replace("\\'o", "ó");
+    }else if (st.indexOf("\\'{\\o}") >= 0){
+      st = st.replace("\\'{\\o}", "ó");
+    }else if (st.indexOf("\`o") >= 0){
+      st = st.replace("\\`o", "ò");
+    }else if (st.indexOf("{\\'u}") >= 0){
+      st = st.replace("{\\'u}", "ú");
+    }else if (st.indexOf("\'{u}") >= 0){
+      st = st.replace("\\'{u}", "ú");
+    }else if (st.indexOf("\'u") >= 0){
+      st = st.replace("\\'u", "ú");
+    }else if (st.indexOf("\\'{\\u}") >= 0){
+      st = st.replace("\\'{\\u}", "ú");
+    }else if (st.indexOf("\`u") >= 0){
+      st = st.replace("\\`u", "ù");
+    }else{
+      
+      index = -1;
+      
+    }
+  }
+  
+  return st;
+}
+
+function checkSimbols(st){  
+  
+  var regex = /(\\.*?{.*?}|{.*?})/gmi;
+  
+  var arMatched = st.match(regex);
+  if(arMatched !== null){ //Hay coincidencias
+    for(var i = 0; i < arMatched.length; i++){
+      var s = arMatched[i];
+      var newSt = "";
+      var startFinded = false;
+      var endFinded = false;
+      var j = 0;
+      while(!startFinded){
+        var c1 = s[j];
+        if(c1 == "{"){
+          startFinded = true;
+          j++;
+          while(!endFinded){              //ELIMINA LAS LLAVES DEL TIPO: {G}recia o \url{blabla} -> Grecia y blabla
+            var c2 = s[j];
+            if(c2 == "}"){
+              endFinded = true;
+            }else{
+              newSt = newSt + c2;
+              j++;
+            }
+          }
+        }else{
+          j++;
+        }
+      }
+      var st = st.replace(s,newSt);      
+    }
+  }
+  
+  return st;
 }
 
 function getFiles(e) {
@@ -727,12 +981,6 @@ function getFiles(e) {
     data[e].files.push({name: file.getName(), id: file.getId(), mimeType: file.getMimeType()});
   }
   return data;
-}
-
-function doSomething(id) {
-  // do something
-  var res = id;
-  return res;
 }
 
 //========================================================
@@ -2093,49 +2341,6 @@ BibTex.prototype = {
             var last     = '';
             var jr       = '';
           
-            var prueba = author.indexOf("{\'a}");
-            
-            //comprobar si existen posible acentos              
-            if (author.indexOf("{\\'a}") >= 0){          
-                author = author.replace("{\\'a}", "á");
-            }else if (author.indexOf("\'{a}") >= 0){
-                author = author.replace("\\'{a}", "á");
-            }else if (author.indexOf("\'a") >= 0){
-                author = author.replace("\\'a", "á");
-            }
-
-            if (author.indexOf("{\\'e}") >= 0){
-                author = author.replace("{\\'e}", "é");
-            }else if (author.indexOf("\'{e}") >= 0){
-                author = author.replace("\\'{e}", "é");
-            }else if (author.indexOf("\'e") >= 0){
-                author = author.replace("\\'e", "é");
-            } 
-
-            if (author.indexOf("{\\'i}") >= 0){
-                author = author.replace("{\\'i}", "í");
-            }else if (author.indexOf("\'{i}") >= 0){
-                author = author.replace("\\'{i}", "í");
-            }else if (author.indexOf("\'i") >= 0){
-                author = author.replace("\\'i", "í");
-            } 
-
-            if (author.indexOf("{\\'o}") >= 0){
-                author = author.replace("{\\'o}", "ó");
-            }else if (author.indexOf("\'{o}") >= 0){
-                author = author.replace("\\'{o}", "ó");
-            }else if (author.indexOf("\'o") >= 0){
-                author = author.replace("\\'o", "ó");
-            } 
-
-            if (author.indexOf("{\\'u}") >= 0){
-                author = author.replace("{\\'u}", "ú");
-            }else if (author.indexOf("\'{u}") >= 0){
-                author = author.replace("\\'{u}", "ú");
-            }else if (author.indexOf("\'u") >= 0){
-                author = author.replace("\\'u", "ú");
-            }
-
             if (strpos(author, ',') === false) {
                 var tmparray = array();
                 //tmparray = explode(' ', author);
@@ -2703,16 +2908,16 @@ BibTex.prototype = {
        }else{
          exito = false;
        }       
-     }else{
+     }else if(entry['entryType'] != "proceedings"){
        if (array_key_exists('author', entry)) { 
-           ret.authors = entry['author'];                           //AUTHOR
+           ret.authors = entry['author'];                //AUTHOR
        }else{
          exito = false;
        }
      }
      
      
-      if (array_key_exists('title', entry)) {
+     if (array_key_exists('title', entry)) {
        ret.title = this._unwrap(entry['title']);   // TITLE
      }
      else{
@@ -3032,7 +3237,7 @@ BibTex.prototype = {
           //Optional fields: author, title, howpublished, month, year, note.
                     
           if (array_key_exists('author', entry)) {
-            ret.author = entry['author'];
+            ret.authors = entry['author'];
           }
           if (array_key_exists('title', entry)) {
             ret.title = this._unwrap(entry['title']);
@@ -3101,6 +3306,7 @@ BibTex.prototype = {
         case "techreport":
           
           //Required fields: author, title, institution, year.
+          //Optional fields: type, number, address, month, note.
                    
           var exito = this.checkRequieredFields(entry, ret);
           ret.exito = exito;
@@ -3117,14 +3323,14 @@ BibTex.prototype = {
             if (array_key_exists('number', entry)) {
               ret.number = this._unwrap(entry['number']);
             }
-            if (array_key_exists('pages', entry)) {
-              ret.pages = this._unwrap(entry['pages']);
-            } 
             if (array_key_exists('address', entry)) {
               ret.address = this._unwrap(entry['address']);
             }
             if (array_key_exists('note', entry)) {
               ret.note = this._unwrap(entry['note']);
+            } 
+            /*if (array_key_exists('pages', entry)) {
+              ret.pages = this._unwrap(entry['pages']);
             } 
             if (array_key_exists('publisher', entry)) {
               ret.publisher = this._unwrap(entry['publisher']);
@@ -3138,7 +3344,7 @@ BibTex.prototype = {
             if (array_key_exists('pdfurl', entry)) {
               ret.pdfurl = this._unwrap(entry['pdfurl']);
             }
-            if (array_key_exists('booktitle', entry)) {
+            if (array_key_exists('booktitle', entry)) {                     //DESCAMENTAR SI SE QUIEREN AÑADIR
               ret.booktitle = this._unwrap(entry['booktitle']);
             }
             if (array_key_exists('bdsk-url-1', entry)) {
@@ -3157,7 +3363,7 @@ BibTex.prototype = {
               ret.date_modified = entry['date-modified'];
             }
                                
-            /*if (array_key_exists('ymas', entry)) {
+            if (array_key_exists('ymas', entry)) {
               ret.ymas = this._unwrap(entry['ymas']);
             }*/
           }

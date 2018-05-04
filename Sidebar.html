@@ -8,6 +8,19 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.js"></script>
     
     <style>
+    
+    div.success {
+      padding-top: 10px;
+      color: green;
+    }
+    
+    select.select_style{
+      padding-top: 10px;
+    }
+    
+    div.error {
+      padding-top: 10px;
+    }
      
     #select_file {
       text-align: left;
@@ -51,15 +64,25 @@
     </style>
   </head>
   <body>
+  
     <div class="sidebar branding-below">
+    
     
       <form>        
         <div class="block form-group">
-          <label for="select_file">Select a bibtex document:</label>
+          <label for="select_file">Selecciona el documento bibtex:</label>
           <br>
           <select id="select_file" name="select_file"></select>
           <p><b id="tittle" ></b></p>
           <p id="id"></p>
+        </div>
+        
+        <div class="block form-group">
+          <label for="select_style">Selecciona el estilo para la Bibliografía:</label>
+          <br>
+          <select id="select_style" name="select_style">
+            <option value="unsrt">unsrt</option>
+          </select>
         </div>
         
         <!-- <div class="block form-group">
@@ -120,7 +143,6 @@
              }
              return;
            }
-           google.script.run.withSuccessHandler(output).doSomething(id);
         });
       });
 
@@ -143,38 +165,35 @@
       
       
       function openDoc(){
-      
+        $("#success").remove();
         this.disabled = true;
         $('#error').remove();
         
+        var style = $('#select_style').val();
         var id = $('#select_file').val();
         google.script.run
         .withSuccessHandler(      
-          function(bibtext, element) {
-            if(bibtext){
-              alert("Exito!! Comprueba el nuevo documento que se ha creado en tu drive con nombre: New Document");
+          function(exitoBibtex, element) {
+            if(exitoBibtex){
+              var msg = "Comprueba el nuevo documento que se ha creado en tu Drive con nombre: New Document";
+              showSuccess(msg, $('#button-bar'));
             }else{
-              alert("Error durante la combinacion de los documentos");
-            }
-            return;
+              var msg = "Hubo algun error durante el proceso. Es posible que en tu .bib falte algún campo obligatorio en alguna entrada o no hayas añadido el \bibliography para insertar la sección References.";
+              showError(msg, $('#button-bar'));
+            }            
+           
+            element.disabled = false;            
         })
         .withFailureHandler(
           function(msg, element) {
-          msg = "There was a problem when the bibtex document was opened. Try again."
+          msg = "Hubo un problema durante el proceso.Comprueba que hayas seleccionado el documento correcto.";
           showError(msg, $('#button-bar'));
           element.disabled = false;
         })
         .withUserObject(this)
-        .getBibtexAndDoc(id)
+        .getBibtexAndDoc(id,style);
         
-      }
-
-      function output(res){
-        var tittle = "Selected document: ";
-        $('#tittle').text(tittle);
-        $('#id').text(res);
-      }
-        
+      }        
         
       function resetValues() {
         document.getElementById("id").innerHTML = "";
@@ -208,6 +227,12 @@
         var div = $('<div id="error" class="error">' + msg + '</div>');
         $(element).after(div);
       }
+      
+      function showSuccess(msg, element) {
+        var div = $('<div id="success" class="success">' + msg + '</div>');
+        $(element).after(div);
+      }
+
     </script>
     
   </body>
