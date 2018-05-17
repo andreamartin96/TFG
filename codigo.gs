@@ -683,8 +683,10 @@ function constructObj(info){
       obj[key] = finalAuthor;
     }else if((key == 'clave') || (key == 'entryType') || (key == 'exito')){
       //ignoro
-    }else{     
-      obj[key] = info[key];
+    }else{
+      if(key in obj){
+        obj[key] = info[key];
+      }
     }  
   } 
   
@@ -3194,19 +3196,19 @@ BibTex.prototype = {
             if (array_key_exists('pages', entry)) {
               ret.pages = this._unwrap(entry['pages']);
             }  
-            if (array_key_exists('numpages', entry)) {
-              ret.numpages = this._unwrap(entry['numpages']);
-            }          
             if (array_key_exists('note', entry)) {
               ret.note = this._unwrap(entry['note']);   
             } 
-            if (array_key_exists('publisher', entry)) {
+            /*if (array_key_exists('publisher', entry)) {
               ret.publisher = this._unwrap(entry['publisher']);
+            }
+            if (array_key_exists('numpages', entry)) {
+              ret.numpages = this._unwrap(entry['numpages']);
             }
             if (array_key_exists('address', entry)) {
               ret.address = this._unwrap(entry['address']);
             }
-            /*if (array_key_exists('issue_date', entry)) {
+            if (array_key_exists('issue_date', entry)) {
               ret.issue_date = this._unwrap(entry['issue_date']);
             }
             if (array_key_exists('url', entry)) {
