@@ -4,7 +4,7 @@
 
 /*
        
-       TERMINAR LA FUNCION finishInfo() Y CAPTURAR EL ERROR SI NO EXISTE \bibliography
+       ESTE PROYECTO ESTA BAJO LA LICENCIA GPL
        
 */ 
 
@@ -288,7 +288,7 @@ function setBiblio(body, clavesNoEncontradas, listaTuplas, estilo, clavesEncontr
     style[DocumentApp.Attribute.FONT_SIZE] = 10;
     style[DocumentApp.Attribute.BOLD] = true;
     
-    var miParagraph = body.insertParagraph(index, "References");
+    var miParagraph = body.insertParagraph(index, "Referencias");
     
     index++;
     miParagraph.setHeading(DocumentApp.ParagraphHeading.HEADING1);
@@ -421,7 +421,7 @@ function constructInfo(listaTuplas, estilo, body, index, clavesNoEncontradas){
     break;
     case "unsrt":
       var arrayCitesInserted = [];
-      var contador = 0;
+      var contador = 1;
       for(var i = 0; i < listaTuplas.length; i++){
         var existe = checkIfExist(arrayCitesInserted,listaTuplas[i].cite);
         var obj = {};
